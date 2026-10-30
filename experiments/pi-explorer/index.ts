@@ -10,6 +10,8 @@ export default function (pi: ExtensionAPI) {
     inspect_world: empty,
     move_by: Type.Object({ forward: Type.Optional(Type.Number()), right: Type.Optional(Type.Number()), up: Type.Optional(Type.Number()) }, { additionalProperties: false }),
     move_to: Type.Object({ x: Type.Number({ minimum: -118, maximum: 118 }), y: Type.Number({ minimum: -65, maximum: 65 }), z: Type.Number({ minimum: -118, maximum: 118 }) }, { additionalProperties: false }),
+    turn_by: Type.Object({ radians: Type.Number() }, { additionalProperties: false }),
+    look_at: Type.Object({ x: Type.Number(), y: Type.Number(), z: Type.Number() }, { additionalProperties: false }),
     navigation_status: empty,
     stop_movement: empty,
   };
@@ -18,7 +20,9 @@ export default function (pi: ExtensionAPI) {
     move_by: 'Start asynchronous movement relative to player heading: forward, right, up, in world units. Omitted components default to zero. Replaces any previous destination; returns immediately.',
     move_to: 'Start asynchronous movement to absolute x, y, z coordinates. Replaces any previous destination; returns immediately.',
     navigation_status: 'Read navigation state (idle, moving, arrived, blocked) and optional target. Does not wait for arrival.',
-    stop_movement: 'Cancel current movement immediately.',
+    turn_by: 'Progressively rotate heading by radians (positive turns left). Replaces movement or rotation; returns immediately.',
+    look_at: 'Progressively face a world position in the horizontal plane (Y is up). Replaces movement or rotation; returns immediately.',
+    stop_movement: 'Cancel current movement and rotation immediately.',
   };
   for (const name of names) {
     pi.registerTool({ name, label: name, description: descriptions[name], parameters: schemas[name],

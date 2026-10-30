@@ -28,7 +28,7 @@ npm start
 
 A graphical desktop/display is required: Chromium is deliberately **not headless**. Default URL: `http://localhost:5173`. Override with `WORLDGL_URL=http://127.0.0.1:5174 npm start` if necessary. Only local HTTP(S) URLs are accepted.
 
-1. Check the startup notification lists exactly `inspect_world`, `move_by`, `move_to`, `navigation_status`, `stop_movement`.
+1. Check the startup notification lists exactly `inspect_world`, `move_by`, `move_to`, `navigation_status`, `stop_movement`, `turn_by`, `look_at`.
 2. Select an already configured model with Pi's `/model` selector (existing Pi authentication is reused).
 3. Paste the contents of [prompt.md](prompt.md) into Pi and submit.
 4. Watch Chromium while the agent operates. Avoid keyboard movement/manual navigation, which can interfere with the experiment.

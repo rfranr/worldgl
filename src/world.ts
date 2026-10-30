@@ -51,7 +51,19 @@ export function createWorld(seed = SEED, objects: WorldObject[] = INITIAL_OBJECT
   // Only reductions beyond this threshold count; jitter must not keep a trip alive.
   const progressThreshold = 0.05, inactivityLimit = 5;
   let inactiveTime = 0, progressDistance = Infinity;
-  const stop = () => { controls = zeroControls(); navigation = { state: 'idle' }; };
+  let rotation: number | undefined;
+  const angularSpeed = 1.8;
+  const headingTo = (target: Vector) => {
+    const dx = target.x - player.position.x, dz = target.z - player.position.z;
+    return Math.hypot(dx, dz) > 1e-9 ? Math.atan2(-dx, -dz) : player.orientation.y;
+  };
+  const turnTowards = (target: number, dt: number) => {
+    const delta = Math.atan2(Math.sin(target - player.orientation.y), Math.cos(target - player.orientation.y));
+    const step = angularSpeed * dt;
+    player.orientation.y += Math.max(-step, Math.min(step, delta));
+    return Math.abs(delta) <= step;
+  };
+  const stop = () => { controls = zeroControls(); navigation = { state: 'idle' }; rotation = undefined; };
   const moveTo = (target: Vector) => {
     position(target);
     stop();
@@ -77,7 +89,7 @@ export function createWorld(seed = SEED, objects: WorldObject[] = INITIAL_OBJECT
         if (!(key in zeroControls())) throw new Error('Unknown control');
         finite(value); if (Math.abs(value) > 1) throw new Error('Control outside -1..1');
       }
-      navigation = { state: 'idle' }; controls = { ...controls, ...patch }; refreshed = now();
+      navigation = { state: 'idle' }; rotation = undefined; controls = { ...controls, ...patch }; refreshed = now();
     },
     getControls() {
       if (now() - refreshed >= timeout) controls = zeroControls();
@@ -87,6 +99,16 @@ export function createWorld(seed = SEED, objects: WorldObject[] = INITIAL_OBJECT
       finite(milliseconds); if (milliseconds < 0) throw new Error('Negative timeout'); timeout = milliseconds;
     },
     moveTo,
+    turnBy({ radians }: { radians: number }) {
+      finite(radians);
+      stop();
+      rotation = player.orientation.y + radians;
+    },
+    lookAt(target: Vector) {
+      vector(target);
+      stop();
+      rotation = headingTo(target);
+    },
     moveBy(displacement: { forward?: number; right?: number; up?: number }) {
       if (!displacement || typeof displacement !== 'object') throw new Error('Expected displacement');
       for (const [key, value] of Object.entries(displacement)) {
@@ -134,10 +156,15 @@ export function createWorld(seed = SEED, objects: WorldObject[] = INITIAL_OBJECT
       else if (distance <= 0.15) navigation.state = 'arrived';
       else if (inactiveTime >= inactivityLimit) navigation.state = 'blocked';
       else {
+        turnTowards(headingTo(target), dt);
         const scale = Math.min(1, 12 * dt / distance);
         p.x += dx * scale; p.z += dz * scale; p.y += dy * scale;
         p.y = Math.max(p.y, terrain.height(p.x, p.z) + 1.5);
       }
+      return;
+    }
+    if (rotation !== undefined) {
+      if (turnTowards(rotation, dt)) rotation = undefined;
       return;
     }
     const input = keyboard ? {

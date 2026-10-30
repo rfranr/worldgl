@@ -52,6 +52,8 @@ world.interact.moveBy({ forward: 10 }); // relative to heading at issue time
 world.interact.getNavigationStatus(); // idle | moving | arrived | blocked, plus target
 world.interact.moveTo({ x: 20, y: 15, z: -20 });
 world.interact.moveTo({ x: -10, y: 12, z: 30 }); // replaces destination
+world.interact.turnBy({ radians: Math.PI / 2 }); // asynchronous heading change
+world.interact.lookAt({ x: 20, y: 15, z: -20 }); // face horizontal bearing
 world.interact.setControlTimeout(2000);
 world.interact.setControls({ forward: 1, turn: 0.5 });
 world.interact.setControls({ turn: -0.5 }); // retains forward
