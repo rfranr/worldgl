@@ -2,9 +2,9 @@ import * as THREE from 'three';
 import { CELL, SIZE, SEED, createTerrain, createWorld, type World } from './world';
 import './style.css';
 
-declare global { interface Window { world: Pick<World, 'inspect' | 'terrainHeight'> } }
+declare global { interface Window { world: Pick<World, 'inspect' | 'terrainHeight' | 'interact'> } }
 const world = createWorld();
-window.world = Object.freeze({ inspect: world.inspect, terrainHeight: world.terrainHeight });
+window.world = Object.freeze({ inspect: world.inspect, terrainHeight: world.terrainHeight, interact: world.interact });
 const scene = new THREE.Scene();
 scene.background = new THREE.Color('#bacfcf');
 scene.fog = new THREE.Fog('#bacfcf', 80, 230);
@@ -44,13 +44,30 @@ const factories = {
   rock: () => new THREE.Mesh(new THREE.DodecahedronGeometry(3).translate(0, 2, 0), material('#606c72')),
   tower: () => new THREE.Mesh(new THREE.BoxGeometry(3, 10, 3).translate(0, 5, 0), material('#d0d7c7')),
 };
-for (const object of world.objects) {
-  const mesh = factories[object.type]();
-  mesh.position.copy(object.position);
-  mesh.rotation.set(object.orientation.x, object.orientation.y, object.orientation.z);
-  mesh.name = object.id;
-  scene.add(mesh);
+const objectMeshes = new Map<string, THREE.Mesh>();
+function syncObjects() {
+  for (const [id, mesh] of objectMeshes) {
+    if (!world.objects.some(o => o.id === id && o.type === mesh.userData.type)) {
+      scene.remove(mesh);
+      mesh.geometry.dispose();
+      (mesh.material as THREE.Material).dispose();
+      objectMeshes.delete(id);
+    }
+  }
+  for (const object of world.objects) {
+    let mesh = objectMeshes.get(object.id);
+    if (!mesh) {
+      mesh = factories[object.type]();
+      mesh.name = object.id;
+      mesh.userData.type = object.type;
+      objectMeshes.set(object.id, mesh);
+      scene.add(mesh);
+    }
+    mesh.position.copy(object.position);
+    mesh.rotation.set(object.orientation.x, object.orientation.y, object.orientation.z);
+  }
 }
+syncObjects();
 const player = new THREE.Group();
 const hull = new THREE.Mesh(new THREE.ConeGeometry(0.85, 3, 4), material('#d66a43'));
 hull.rotation.x = -Math.PI / 2;
@@ -91,6 +108,7 @@ renderer.setAnimationLoop(now => {
   const dt = Math.min((now - previous) / 1000, 0.05);
   previous = now;
   world.update(dt, keys);
+  syncObjects();
   player.position.copy(world.player.position);
   player.rotation.y = world.player.orientation.y;
   follow(false, dt);

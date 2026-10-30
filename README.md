@@ -43,6 +43,52 @@ window.world.terrainHeight(10, -20)     // exact triangulated surface height
 
 The top-right panel demonstrates this same API. Snapshots can be modified without changing the simulation. Coordinates use Y up; heading zero faces negative Z. Terrain queries are defined outside the visible map as well, but the craft stays within it.
 
+## Interaction API
+
+Commands return immediately; the render loop advances movement. Console examples:
+
+```js
+world.interact.moveBy({ forward: 10 }); // relative to heading at issue time
+world.interact.getNavigationStatus(); // idle | moving | arrived | blocked, plus target
+world.interact.moveTo({ x: 20, y: 15, z: -20 });
+world.interact.moveTo({ x: -10, y: 12, z: 30 }); // replaces destination
+world.interact.setControlTimeout(2000);
+world.interact.setControls({ forward: 1, turn: 0.5 });
+world.interact.setControls({ turn: -0.5 }); // retains forward
+world.interact.getControls();
+world.interact.stop();
+world.interact.setPlayerPosition({ x: 0, y: 20, z: 12 });
+world.interact.setPlayerOrientation({ x: 0, y: Math.PI / 2, z: 0 });
+world.interact.addObject({
+  id: 'test-rock', type: 'rock', position: { x: 10, y: 5, z: 10 },
+  orientation: { x: 0, y: 0, z: 0 }
+});
+world.interact.moveObject('test-rock', { x: 20, y: 5, z: 20 });
+world.interact.removeObject('test-rock');
+world.interact.reset();
+```
+
+Controls are intensities in [-1, 1]: `forward`, `turn`, `strafe`, `vertical`.
+Unspecified axes are retained. The default inactivity timeout is 2000 wall-clock
+milliseconds; any control update refreshes all axes. Timeout accepts finite
+nonnegative milliseconds (zero expires immediately), and does not affect navigation.
+
+Navigation clears manual controls; manual commands cancel navigation. Stop and
+teleportation cancel both. **Any held movement key cancels API movement**, even
+opposing keys: releasing the keyboard never resumes a stale command. Reset also
+restores initial objects. Object meshes synchronize on the next rendered frame,
+including disposal of removed resources; inspection reflects mutations immediately.
+
+Navigation follows a straight line at 12 units/second with 0.15-unit arrival
+tolerance, terrain clearance of 1.5, and no obstacle avoidance. Unreachable ground
+targets become blocked; a 30-second simulation-time limit guarantees termination.
+Positions require X/Z within [-118, 118] and Y within [-65, 65]. Teleports clamp
+upward to terrain clearance. All coordinates must be finite; invalid commands,
+duplicate IDs, unsupported types and missing object IDs throw. Returned snapshots,
+controls and status are detached copies. Angles are radians; only yaw controls
+flight heading. The simulation pauses with rendering in background tabs, but manual
+controls expire by wall-clock time before the next movement frame.
+
 ## Structure and editing
 
 - `src/world.ts`: terrain math, initial object data, movement, inspection; no rendering dependencies.
@@ -60,6 +106,6 @@ Inspected [WorldDomination](https://github.com/till213/WorldDomination), especia
 
 ## Validation and limitations
 
-`npm test` passes all three automated tests; `npm run build` passes type checking and produces the production bundle. Browser appearance and keyboard interaction still need human verification in a WebGL-enabled browser. There is no browser automation test in this repository.
+`npm test` passes all six automated tests; `npm run build` passes type checking and produces the production bundle. Browser appearance and keyboard interaction still need human verification in a WebGL-enabled browser. There is no browser automation test in this repository.
 
-Deliberately omitted: physics engine, landmark collisions, world wrapping, imported models, persistence and object-editing UI. Landmarks are static visual objects; the craft can fly through them. These are not required for this minimal prototype.
+Deliberately omitted: physics engine, landmark collisions, world wrapping, imported models, persistence and object-editing UI. Landmarks are API-editable visual objects; the craft can fly through them. These are not required for this minimal prototype.
