@@ -1,11 +1,21 @@
 import * as THREE from 'three';
 import { CELL, SIZE, SEED, createTerrain, createWorld, type World } from './world';
 import './style.css';
+import { createTrajectory } from './trajectory';
+import { createTrajectoryView } from './trajectory-view';
+import { createTrajectoryUI } from './trajectory-ui';
 
-declare global { interface Window { world: Pick<World, 'inspect' | 'terrainHeight' | 'interact'> } }
+declare global { interface Window {
+  world: Pick<World, 'inspect' | 'terrainHeight' | 'interact'>;
+  worldDebug: { trajectory: ReturnType<typeof createTrajectory>['api'] };
+} }
 const world = createWorld();
-window.world = Object.freeze({ inspect: world.inspect, terrainHeight: world.terrainHeight, interact: world.interact });
+const trajectory = createTrajectory(world);
+window.worldDebug = Object.freeze({ trajectory: trajectory.api });
+const syncTrajectoryUI = createTrajectoryUI(window.worldDebug.trajectory, world.inspect);
+window.world = Object.freeze({ inspect: world.inspect, terrainHeight: world.terrainHeight, interact: trajectory.interact });
 const scene = new THREE.Scene();
+const syncTrajectory = createTrajectoryView(scene, trajectory);
 scene.background = new THREE.Color('#bacfcf');
 scene.fog = new THREE.Fog('#bacfcf', 80, 230);
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -77,11 +87,15 @@ player.add(wings);
 scene.add(player);
 const keys = new Set<string>();
 const controls = new Set(['KeyW','KeyS','KeyA','KeyD','KeyQ','KeyE','Space','ShiftLeft','ShiftRight','KeyR']);
+document.addEventListener('focusin', event => {
+  if (event.target instanceof Element && event.target.closest('#trajectory-debug')) keys.clear();
+});
 window.addEventListener('keydown', event => {
+  if (event.target instanceof Element && event.target.closest('#trajectory-debug')) return;
   if (!controls.has(event.code)) return;
   event.preventDefault();
   keys.add(event.code);
-  if (event.code === 'KeyR') { world.reset(); follow(true); }
+  if (event.code === 'KeyR') { trajectory.interact.reset(); follow(true); }
 });
 window.addEventListener('keyup', event => keys.delete(event.code));
 window.addEventListener('blur', () => keys.clear());
@@ -108,6 +122,9 @@ renderer.setAnimationLoop(now => {
   const dt = Math.min((now - previous) / 1000, 0.05);
   previous = now;
   world.update(dt, keys);
+  trajectory.update(dt);
+  syncTrajectory();
+  syncTrajectoryUI(now);
   syncObjects();
   player.position.copy(world.player.position);
   player.rotation.y = world.player.orientation.y;

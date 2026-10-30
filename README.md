@@ -19,6 +19,43 @@ npm run build      # TypeScript checks + production bundle
 npm run preview    # serve the production build locally
 ```
 
+## Trajectory debugging (browser only)
+
+Recording is off by default and is exposed **only** through `window.worldDebug`, never through agent tools.
+
+Use the bottom-right **Trajectory recorder** panel without opening developer tools: start/stop, clear, show/hide paths or destination markers, and download JSON. The panel shows recording state and segment/sample counts. Click its heading to collapse it; the **Debug panel** and **Minimap** checkboxes independently hide either view and remain available to restore them. Focusing a debug control releases held keyboard flight keys; click back into the scene to resume keyboard flight.
+
+The persistent canvas minimap is fixed north-up (−Z at the top, +X to the right), spanning the full 240 × 240 world. Its white arrow shows player position/heading; circles, squares and diamonds identify beacons, rocks and towers. Paths and destination outlines use the same status colors and visibility settings as the 3D overlay. It updates during navigation, including while recording is stopped. Debug UI and history are not exposed to agent tools.
+
+In the browser console:
+
+```js
+const trajectory = window.worldDebug.trajectory;
+trajectory.start();
+// Navigate with the existing Pi agent or keyboard.
+trajectory.stop();
+trajectory.getHistory(); // detached, JSON-serializable snapshot
+trajectory.getState(); // recording, visible, destinationsVisible
+trajectory.setVisible(false); // true to show again; does not stop recording
+trajectory.setDestinationsVisible(false); // true to show destination diamonds
+trajectory.clear(); // history/overlay only; does not reset the world
+```
+
+Lines/destination diamonds are blue while active, green when completed, amber when interrupted (including recording stopped), and red when blocked. Successive commands remain separate, even for identical destinations. Recording can start during an existing trip; its earlier command arguments are then unavailable, but the current destination is captured.
+
+Samples contain simulation timestamps in seconds, absolute XYZ positions and Euler orientations in radians (Y up). Sampling is every 0.1 simulation seconds, plus segment boundaries; simulation time advances only with world updates, not wall time. Each segment stores its command/arguments, destination, outcome and timestamped status events including `arrived` and `blocked`. History retains the newest 64 segments and newest 1,000 samples per segment; older data is discarded. `startedAt` is an ISO wall-clock timestamp for the history. The versioned JSON has no Three.js dependencies.
+
+Download JSON from the console:
+
+```js
+const url = URL.createObjectURL(new Blob([trajectory.exportJSON()], { type: 'application/json' }));
+const link = document.createElement('a');
+link.href = url;
+link.download = 'trajectory.json';
+link.click();
+setTimeout(() => URL.revokeObjectURL(url), 1000);
+```
+
 ## Controls
 
 - **W / S**: fly forward / backward relative to heading
