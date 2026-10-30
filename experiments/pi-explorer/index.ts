@@ -2,9 +2,30 @@ import type { ExtensionAPI } from '@earendil-works/pi-coding-agent';
 import { Type } from '@earendil-works/pi-ai';
 import { chromium } from 'playwright';
 import { WorldBrowser, names } from './core.mjs';
+import { ExperimentExport } from './export.mjs';
 
 export default function (pi: ExtensionAPI) {
   const browser = new WorldBrowser(chromium, process.env.WORLDGL_URL);
+  let exporter: ExperimentExport;
+  let completed = false;
+  const checkpoint = async (ctx, status) => {
+    try { await exporter?.save(ctx, browser, status); }
+    catch (error) { ctx.ui.notify(`Experiment export failed: ${error.message}`, 'error'); }
+  };
+  pi.registerCommand('export-experiment', {
+    description: 'Save this exploration for offline analysis (human only)',
+    handler: async (_args, ctx) => {
+      await checkpoint(ctx, completed ? 'completed' : 'interrupted');
+      ctx.ui.notify(`Experiment directory: ${exporter.directory}`, 'info');
+    },
+  });
+  pi.on('agent_start', () => { completed = false; });
+  pi.on('turn_end', async (_event, ctx) => { await checkpoint(ctx, 'in-progress'); });
+  pi.on('agent_settled', async (_event, ctx) => {
+    const last = ctx.sessionManager.getEntries().filter(e => e.type === 'message' && e.message.role === 'assistant').at(-1);
+    completed = last?.message.stopReason === 'stop';
+    await checkpoint(ctx, completed ? 'completed' : 'interrupted');
+  });
   const empty = Type.Object({}, { additionalProperties: false });
   const schemas = {
     inspect_world: empty,
@@ -37,11 +58,17 @@ export default function (pi: ExtensionAPI) {
   pi.on('session_start', async (_event, ctx) => {
     restrict();
     ctx.ui.notify(`Explorer tools verified: ${names.join(', ')}`, 'info');
+    exporter = new ExperimentExport();
     await browser.start();
+    await browser.page.evaluate(() => window.worldDebug.trajectory.start());
+    await checkpoint(ctx, 'in-progress');
   });
   pi.on('before_agent_start', () => { restrict(); });
   pi.on('tool_call', event => {
     if (!names.includes(event.toolName)) return { block: true, reason: 'Only world exploration tools are permitted' };
   });
-  pi.on('session_shutdown', async () => { await browser.close(); });
+  pi.on('session_shutdown', async (_event, ctx) => {
+    await checkpoint(ctx, completed ? 'completed' : 'interrupted');
+    await browser.close();
+  });
 }

@@ -44,6 +44,27 @@ The extension explicitly sets and checks the five-tool active set at session sta
 
 This is **tool-level isolation, not an OS security sandbox**. The trusted extension itself has normal process permissions; Pi's human-operated UI is not sandboxed. Do not load other extensions or attach repository files to this experiment.
 
+## Export and inspect
+
+Run `/export-experiment` in Pi after exploration (or after cancelling it). The human-only command reports a unique directory under `experiments/pi-explorer/exports/`; it is not an agent tool. Checkpoints also save there at startup, each turn, settlement and orderly shutdown. Recording uses `window.worldDebug.trajectory.start()` and its existing bounded history, not a second recorder. Do not clear/stop recording in the debug UI during an experiment.
+
+Artifacts:
+- `prompt.txt`: first native user message's text; the original structured message, including any images, remains in the session.
+- `session.jsonl`: native Pi header and all session entries, including tool calls/results, model changes and usage. This also works with the launcher's ephemeral session. Resume/inspect with `pi --session /absolute/path/session.jsonl` outside the isolated launcher.
+- `trajectory.json`: native history snapshot (or `null` if unavailable).
+- `manifest.json`: seed, commit, timestamps, selected model, configuration, active session leaf, completion and availability flags.
+- `metrics.json`: per-tool call counts, error count, provider usage/cost totals, model identities and sampled navigation distance/outcomes.
+
+Inspect with `jq . manifest.json metrics.json` and `jq '.segments' trajectory.json`. Metrics cover all session entries (including abandoned branches); the manifest records the current leaf. Native trajectory retains at most 64 segments and 1000 samples per segment, so it is not guaranteed to cover a long run. Distance excludes gaps between segments. No usage fields means unavailable usage, not free execution.
+
+Cancelled/error runs are marked interrupted. A killed process retains only the last checkpoint, marked in-progress; no shutdown hook can recover uncheckpointed state after SIGKILL or power loss. A disconnected browser retains the last successful trajectory with `trajectoryStale: true`. `complete` describes normal agent settlement and snapshot availability, not an assurance of unbounded trajectory retention. Atomic artifact replacement commits the manifest last; an abrupt kill during export can leave `.tmp` files or mixed checkpoint artifacts.
+
+Exports never copy credential stores, environment variables, browser storage or unrelated files. They contain the prompt and native transcript verbatim: do not put secrets in prompts or share exports without reviewing them. Output is gitignored and created with private permissions. Export notifications go only to the human UI, never the model context.
+
+```sh
+node --test export.test.mjs
+```
+
 ## Tests
 
 ```sh
