@@ -48,13 +48,16 @@ export function createWorld(seed = SEED, objects: WorldObject[] = INITIAL_OBJECT
   const initialObjects = structuredClone(objects);
   let controls = zeroControls(), timeout = 2000, refreshed = 0;
   let navigation: NavigationStatus = { state: 'idle' };
-  let elapsed = 0;
+  // Only reductions beyond this threshold count; jitter must not keep a trip alive.
+  const progressThreshold = 0.05, inactivityLimit = 5;
+  let inactiveTime = 0, progressDistance = Infinity;
   const stop = () => { controls = zeroControls(); navigation = { state: 'idle' }; };
   const moveTo = (target: Vector) => {
     position(target);
     stop();
     navigation = { state: 'moving', target: { ...target } };
-    elapsed = 0;
+    inactiveTime = 0;
+    progressDistance = Math.hypot(target.x - player.position.x, target.y - player.position.y, target.z - player.position.z);
   };
   const find = (id: string) => {
     const object = landmarks.find(o => o.id === id);
@@ -119,17 +122,21 @@ export function createWorld(seed = SEED, objects: WorldObject[] = INITIAL_OBJECT
     const keyboard = ['KeyW','KeyS','KeyA','KeyD','KeyQ','KeyE','Space','ShiftLeft','ShiftRight'].some(k => keys.has(k));
     if (keyboard) stop();
     if (navigation.state === 'moving') {
-      elapsed += dt;
+      inactiveTime += dt;
       const target = navigation.target!, p = player.position;
       const dx = target.x - p.x, dy = target.y - p.y, dz = target.z - p.z;
       const distance = Math.hypot(dx, dy, dz);
-      if (distance <= 0.15) navigation.state = 'arrived';
-      else if (elapsed >= 30) navigation.state = 'blocked';
+      if (progressDistance - distance >= progressThreshold) {
+        progressDistance = distance;
+        inactiveTime = 0;
+      }
+      if (target.y < terrain.height(target.x, target.z) + 1.5) navigation.state = 'blocked';
+      else if (distance <= 0.15) navigation.state = 'arrived';
+      else if (inactiveTime >= inactivityLimit) navigation.state = 'blocked';
       else {
         const scale = Math.min(1, 12 * dt / distance);
         p.x += dx * scale; p.z += dz * scale; p.y += dy * scale;
         p.y = Math.max(p.y, terrain.height(p.x, p.z) + 1.5);
-        if (target.y < terrain.height(target.x, target.z) + 1.5 && Math.hypot(dx, dz) < 0.15) navigation.state = 'blocked';
       }
       return;
     }
