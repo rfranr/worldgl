@@ -1,4 +1,4 @@
-import { SIZE, type FlightControls, type Vector } from './world';
+import { SIZE, type FlightControls, type Vector } from './world-model';
 
 export type Player = { position: Vector; orientation: Vector };
 export type Height = (x: number, z: number) => number;

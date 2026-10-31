@@ -1,4 +1,4 @@
-import type { FlightControls, Vector, WorldObject } from './world';
+import type { FlightControls, Vector, WorldObject } from './world-model';
 import { finite, headingTo, position, vector, zeroControls, type Height, type Player } from './flight';
 import { createNavigation } from './navigation';
 

@@ -1,4 +1,4 @@
-import type { NavigationStatus, Vector } from './world';
+import type { NavigationStatus, Vector } from './world-model';
 import { headingTo, position, turnTowards, type Height, type Player } from './flight';
 
 export function createNavigation(player: Player, height: Height) {
