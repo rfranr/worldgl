@@ -11,5 +11,6 @@ export type NavigationOutcome = NavigationCommand & { outcome: 'arrived' | 'bloc
 export type NavigationStatus = {
   state: 'idle' | 'moving' | 'arrived' | 'blocked' | 'failed'; target?: Vector;
   active?: NavigationCommand; pending: NavigationCommand[]; outcomes: NavigationOutcome[];
+  route?: { id: number; commandIds: number[]; outcomes: NavigationOutcome[]; completed: number; state: 'moving' | NavigationOutcome['outcome'] };
   progress?: { distanceRemaining: number; fraction: number };
 };

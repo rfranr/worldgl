@@ -65,6 +65,11 @@ export function createInteractions({ player, height, landmarks }: { player: Play
   const reset = () => { stop(); restore(); };
   const interact = Object.freeze({
     setControls: controls.setControls, getControls: controls.getControls, setControlTimeout: controls.setControlTimeout,
+    executeRoute(waypoints: Vector[]) {
+      const acknowledgement = navigation.executeRoute(waypoints);
+      controls.clear();
+      return acknowledgement;
+    },
     moveTo, stop, reset, getNavigationStatus: navigation.getStatus,
     abortNavigation() { controls.clear(); navigation.abort(); return { stopped: true }; },
     turnBy({ radians }: { radians: number }) { finite(radians); stop(); navigation.rotate(player.orientation.y + radians); },

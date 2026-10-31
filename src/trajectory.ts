@@ -13,7 +13,7 @@ export interface TrajectoryAPI {
 }
 
 function observeCommands(world: World, begin: (name: string, args: unknown[]) => void) {
-  const commands = new Set(['moveTo', 'moveBy', 'turnBy', 'lookAt', 'setControls', 'stop', 'setPlayerPosition', 'setPlayerOrientation', 'reset']);
+  const commands = new Set(['executeRoute', 'moveTo', 'moveBy', 'turnBy', 'lookAt', 'setControls', 'stop', 'setPlayerPosition', 'setPlayerOrientation', 'reset']);
   return Object.freeze(Object.fromEntries(Object.entries(world.interact).map(([name, method]) => [name, (...args: unknown[]) => {
     const result = (method as (...args: unknown[]) => unknown)(...args);
     if (commands.has(name)) begin(name, args);

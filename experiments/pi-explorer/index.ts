@@ -28,6 +28,7 @@ export default function (pi: ExtensionAPI) {
   });
   const empty = Type.Object({}, { additionalProperties: false });
   const schemas = {
+    execute_route: Type.Object({ waypoints: Type.Array(Type.Object({ x: Type.Number({ minimum: -118, maximum: 118 }), y: Type.Number({ minimum: -65, maximum: 65 }), z: Type.Number({ minimum: -118, maximum: 118 }) }, { additionalProperties: false }), { minItems: 1, maxItems: 65 }) }, { additionalProperties: false }),
     inspect_world: empty,
     move_by: Type.Object({ forward: Type.Optional(Type.Number()), right: Type.Optional(Type.Number()), up: Type.Optional(Type.Number()) }, { additionalProperties: false }),
     move_to: Type.Object({ queue: Type.Optional(Type.Boolean()), x: Type.Number({ minimum: -118, maximum: 118 }), y: Type.Number({ minimum: -65, maximum: 65 }), z: Type.Number({ minimum: -118, maximum: 118 }) }, { additionalProperties: false }),
@@ -37,6 +38,7 @@ export default function (pi: ExtensionAPI) {
     stop_movement: empty,
   };
   const descriptions = {
+    execute_route: 'Replace navigation with 1–65 ordered waypoints. Returns acceptance and route ID, not completion. Inspect navigation_status.route; stop_movement cancels the route.',
     inspect_world: 'Observe the current world state: seed, player and objects. Y is up.',
     move_by: 'Start asynchronous movement relative to player heading: forward, right, up, in world units. Omitted components default to zero. Replaces any previous destination; returns immediately.',
     move_to: 'Start asynchronous movement to absolute x, y, z coordinates. Defaults to replacing movement; queue:true appends (64 pending maximum). Returns acceptance and command ID immediately.',

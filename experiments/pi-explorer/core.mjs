@@ -1,8 +1,16 @@
-export const names = ['inspect_world', 'move_by', 'move_to', 'navigation_status', 'stop_movement', 'turn_by', 'look_at'];
+export const names = ['inspect_world', 'move_by', 'move_to', 'execute_route', 'navigation_status', 'stop_movement', 'turn_by', 'look_at'];
 
 export function validate(name, args) {
   if (!names.includes(name)) throw new Error('Unknown world tool');
   if (!args || typeof args !== 'object' || Array.isArray(args)) throw new Error('Expected an argument object');
+  if (name === 'execute_route') {
+    if (Object.keys(args).some(key => key !== 'waypoints') || !Array.isArray(args.waypoints) || args.waypoints.length < 1 || args.waypoints.length > 65) throw new Error('Route requires 1 to 65 waypoints');
+    for (const point of args.waypoints) {
+      validate('move_to', point);
+      if ('queue' in point) throw new Error('Waypoint cannot specify queue');
+    }
+    return;
+  }
   const keys = name === 'move_by' ? ['forward', 'right', 'up'] : ['move_to', 'look_at'].includes(name) ? ['x', 'y', 'z'] : name === 'turn_by' ? ['radians'] : [];
   const values = { ...args };
   if (name === 'move_to' && 'queue' in values) {
@@ -24,6 +32,7 @@ export function worldOperation({ name, args }) {
   switch (name) {
     case 'inspect_world': return world.inspect();
     case 'move_by': world.interact.moveBy(args); return { accepted: true };
+    case 'execute_route': return world.interact.executeRoute(args.waypoints);
     case 'move_to': {
       if (args.queue) return world.interact.moveTo(args, { queue: true });
       world.interact.moveTo(args); return { accepted: true };

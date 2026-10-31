@@ -15,9 +15,36 @@ function snapshot(status: NavigationStatus, initialDistance: number, distanceTo:
   }
   return result;
 }
+function recordRoute(route: NonNullable<NavigationStatus['route']>, result: NavigationOutcome) {
+  route.outcomes.push(result);
+  if (result.outcome === 'arrived') route.completed++;
+  if (route.state === 'moving' && result.outcome !== 'arrived') route.state = result.outcome;
+  if (route.completed === route.commandIds.length) route.state = 'arrived';
+}
 function record(status: NavigationStatus, command: NavigationCommand, outcome: NavigationOutcome['outcome']) {
-  status.outcomes.push({ ...command, outcome });
+  const result = { ...command, outcome };
+  status.outcomes.push(result);
+  if (status.route?.commandIds.includes(command.id)) recordRoute(status.route, result);
   status.outcomes = status.outcomes.slice(-100);
+}
+function finish(status: NavigationStatus, start: (command: NavigationCommand) => void) {
+  if (status.state === 'moving') return;
+  const outcome = status.state as 'arrived' | 'blocked' | 'failed';
+  record(status, status.active!, outcome);
+  status.active = undefined;
+  if (outcome !== 'arrived') {
+    for (const command of status.pending) record(status, command, 'cancelled');
+    status.pending = [];
+  }
+  const next = status.pending.shift();
+  if (next) start(next);
+}
+function submitRoute(waypoints: Vector[], stop: () => void, moveTo: (target: Vector, options: { queue: boolean }) => { id: number }) {
+  if (!Array.isArray(waypoints) || waypoints.length === 0 || waypoints.length > 65) throw new Error('Route requires 1 to 65 waypoints');
+  for (const target of waypoints) position(target);
+  stop();
+  const commandIds = waypoints.map(target => moveTo(target, { queue: true }).id);
+  return { id: commandIds[0], commandIds };
 }
 export function createNavigation(player: Player, height: Height) {
   let status: NavigationStatus = { state: 'idle', pending: [], outcomes: [] };
@@ -26,7 +53,7 @@ export function createNavigation(player: Player, height: Height) {
   function clear(outcome: 'cancelled' | 'interrupted') {
     if (status.active) record(status, status.active, outcome);
     for (const command of status.pending) record(status, command, outcome);
-    status = { state: 'idle', pending: [], outcomes: status.outcomes };
+    status = { state: 'idle', pending: [], outcomes: status.outcomes, route: status.route };
     rotation = undefined;
   }
   let rotation: number | undefined;
@@ -43,28 +70,21 @@ export function createNavigation(player: Player, height: Height) {
     else { rotation = undefined; start(command); }
     return { accepted: true, id: command.id };
   }
-  function finish() {
-    if (status.state === 'moving') return;
-    const outcome = status.state as 'arrived' | 'blocked' | 'failed';
-    record(status, status.active!, outcome);
-    status.active = undefined;
-    if (outcome !== 'arrived') {
-      for (const command of status.pending) record(status, command, 'cancelled');
-      status.pending = [];
-    }
-    const next = status.pending.shift();
-    if (next) start(next);
+  function executeRoute(waypoints: Vector[]) {
+    const route = submitRoute(waypoints, stop, moveTo);
+    status.route = { ...route, outcomes: [], completed: 0, state: 'moving' };
+    return { accepted: true, ...route };
   }
   function update(dt: number) {
     if (status.state === 'moving') {
       status.state = motion.step(status.target!, dt);
-      finish(); return true;
+      finish(status, start); return true;
     }
     if (rotation === undefined) return false;
     if (turnTowards(player, rotation, dt)) rotation = undefined;
     return true;
   }
-  return { stop, abort: () => clear('cancelled'), moveTo, update,
+  return { stop, abort: () => clear('cancelled'), moveTo, executeRoute, update,
     getStatus: () => snapshot(status, initialDistance, motion.distanceTo),
     rotate(target: number) { stop(); rotation = target; } };
 }

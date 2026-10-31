@@ -66,7 +66,7 @@ export class ExperimentExport {
       gitCommit: this.commit, worldSeed: data?.seed ?? null,
       sessionId: ctx.sessionManager.getSessionId(), leafId: ctx.sessionManager.getLeafId(),
       model: ctx.model ? { provider: ctx.model.provider, id: ctx.model.id } : null,
-      configuration: { tools: browser.constructor.name === 'WorldBrowser' ? ['inspect_world', 'move_by', 'move_to', 'navigation_status', 'stop_movement', 'turn_by', 'look_at'] : [], headless: false },
+      configuration: { tools: browser.constructor.name === 'WorldBrowser' ? ['inspect_world', 'move_by', 'move_to', 'execute_route', 'navigation_status', 'stop_movement', 'turn_by', 'look_at'] : [], headless: false },
       availability: { prompt: Boolean(prompt), trajectory: Boolean(data), trajectoryStale: stale, usage: Object.keys(summary.usage).length > 0 },
       limitations: ['Trajectory is the native bounded history (64 segments, 1000 samples per segment); distance is sampled and excludes gaps.', 'Usage and cost are provider-reported; missing values are unavailable, not zero.'],
     };
