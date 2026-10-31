@@ -57,11 +57,16 @@ export function createInteractions({ player, height, landmarks }: { player: Play
   const navigation = createNavigation(player, height);
   const controls = createControls(now, navigation.stop);
   const stop = () => { controls.clear(); navigation.stop(); };
-  const moveTo = (target: Vector) => { position(target); stop(); navigation.moveTo(target); };
+  const moveTo = (target: Vector, options?: { queue?: boolean }) => {
+    const acknowledgement = navigation.moveTo(target, options);
+    controls.clear();
+    return acknowledgement;
+  };
   const reset = () => { stop(); restore(); };
   const interact = Object.freeze({
     setControls: controls.setControls, getControls: controls.getControls, setControlTimeout: controls.setControlTimeout,
     moveTo, stop, reset, getNavigationStatus: navigation.getStatus,
+    abortNavigation() { controls.clear(); navigation.abort(); return { stopped: true }; },
     turnBy({ radians }: { radians: number }) { finite(radians); stop(); navigation.rotate(player.orientation.y + radians); },
     lookAt(target: Vector) { vector(target); stop(); navigation.rotate(headingTo(player, target)); },
     moveBy(displacement: { forward?: number; right?: number; up?: number }) { moveTo(displacementTarget(player, displacement)); },

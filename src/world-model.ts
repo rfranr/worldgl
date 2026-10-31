@@ -6,4 +6,10 @@ export const SEED = 213;
 export type Vector = { x: number; y: number; z: number };
 export type WorldObject = { id: string; type: 'beacon' | 'rock' | 'tower'; position: Vector; orientation: Vector };
 export type FlightControls = { forward: number; turn: number; strafe: number; vertical: number };
-export type NavigationStatus = { state: 'idle' | 'moving' | 'arrived' | 'blocked'; target?: Vector };
+export type NavigationCommand = { id: number; target: Vector };
+export type NavigationOutcome = NavigationCommand & { outcome: 'arrived' | 'blocked' | 'failed' | 'cancelled' | 'interrupted'; reason?: string };
+export type NavigationStatus = {
+  state: 'idle' | 'moving' | 'arrived' | 'blocked' | 'failed'; target?: Vector;
+  active?: NavigationCommand; pending: NavigationCommand[]; outcomes: NavigationOutcome[];
+  progress?: { distanceRemaining: number; fraction: number };
+};

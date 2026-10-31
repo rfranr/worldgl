@@ -34,7 +34,7 @@ A graphical desktop/display is required: Chromium is deliberately **not headless
 4. Watch Chromium while the agent operates. Avoid keyboard movement/manual navigation, which can interfere with the experiment.
 5. Exit Pi normally to close Chromium. If the page/browser is closed, tools report a disconnection; restart the experiment rather than silently resetting its world.
 
-Movement returns an acceptance acknowledgement immediately, not arrival. Read `navigation_status` for progress. Reissuing movement replaces the destination. `move_by` uses player-relative forward/right/up; `move_to` uses absolute x/y/z, with Y up. World API errors (including invalid relative destinations) are surfaced as tool errors.
+Movement returns an acceptance acknowledgement immediately, not arrival. Read `navigation_status` for progress. Reissuing movement replaces the destination unless `move_to` includes `queue:true`. See [queued navigation semantics](NAVIGATION.md) for queue limits, abort, progress and outcomes. `move_by` uses player-relative forward/right/up; `move_to` uses absolute x/y/z, with Y up. World API errors (including invalid relative destinations) are surfaced as tool errors.
 
 ## Isolation
 

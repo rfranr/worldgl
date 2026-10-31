@@ -4,7 +4,12 @@ export function validate(name, args) {
   if (!names.includes(name)) throw new Error('Unknown world tool');
   if (!args || typeof args !== 'object' || Array.isArray(args)) throw new Error('Expected an argument object');
   const keys = name === 'move_by' ? ['forward', 'right', 'up'] : ['move_to', 'look_at'].includes(name) ? ['x', 'y', 'z'] : name === 'turn_by' ? ['radians'] : [];
-  for (const [key, value] of Object.entries(args)) {
+  const values = { ...args };
+  if (name === 'move_to' && 'queue' in values) {
+    if (typeof values.queue !== 'boolean') throw new Error('queue must be boolean');
+    delete values.queue;
+  }
+  for (const [key, value] of Object.entries(values)) {
     if (!keys.includes(key)) throw new Error(`Unknown argument: ${key}`);
     if (typeof value !== 'number' || !Number.isFinite(value)) throw new Error(`${key} must be finite`);
   }
@@ -19,11 +24,15 @@ export function worldOperation({ name, args }) {
   switch (name) {
     case 'inspect_world': return world.inspect();
     case 'move_by': world.interact.moveBy(args); return { accepted: true };
-    case 'move_to': world.interact.moveTo(args); return { accepted: true };
+    case 'move_to': {
+      if (args.queue) return world.interact.moveTo(args, { queue: true });
+      world.interact.moveTo(args); return { accepted: true };
+    }
     case 'turn_by': world.interact.turnBy(args); return { accepted: true };
     case 'look_at': world.interact.lookAt(args); return { accepted: true };
     case 'navigation_status': return world.interact.getNavigationStatus();
-    case 'stop_movement': world.interact.stop(); return { stopped: true };
+    case 'stop_movement':
+      (world.interact.abortNavigation ?? world.interact.stop)(); return { stopped: true };
     default: throw new Error('Unknown world tool');
   }
 }

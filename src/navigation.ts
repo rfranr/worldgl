@@ -1,38 +1,70 @@
-import type { NavigationStatus, Vector } from './world-model';
-import { headingTo, position, turnTowards, type Height, type Player } from './flight';
+import type { NavigationCommand, NavigationOutcome, NavigationStatus, Vector } from './world-model';
+import { position, turnTowards, type Height, type Player } from './flight';
+import { createMotion } from './navigation-motion';
 
-export function createNavigation(player: Player, height: Height) {
-  let status: NavigationStatus = { state: 'idle' };
-  let rotation: number | undefined;
-  let inactiveTime = 0, progressDistance = Infinity;
-  function stop() { status = { state: 'idle' }; rotation = undefined; }
-  function moveTo(target: Vector) {
-    position(target); stop();
-    status = { state: 'moving', target: { ...target } };
-    inactiveTime = 0;
-    progressDistance = Math.hypot(target.x - player.position.x, target.y - player.position.y, target.z - player.position.z);
+function validateRequest(target: Vector, options: { queue?: boolean }, pendingCount: number) {
+  position(target);
+  if (typeof options.queue !== 'undefined' && typeof options.queue !== 'boolean') throw new Error('queue must be boolean');
+  if (options.queue && pendingCount >= 64) throw new Error('Navigation queue full');
+}
+function snapshot(status: NavigationStatus, initialDistance: number, distanceTo: (target: Vector) => number) {
+  const result = structuredClone(status);
+  if (status.target) {
+    const distanceRemaining = distanceTo(status.target);
+    result.progress = { distanceRemaining, fraction: Math.max(0, 1 - distanceRemaining / (initialDistance || 1)) };
   }
-  function advance(dt: number) {
-    inactiveTime += dt;
-    const target = status.target!, p = player.position;
-    const dx = target.x - p.x, dy = target.y - p.y, dz = target.z - p.z;
-    const distance = Math.hypot(dx, dy, dz);
-    // Jitter must not keep a trip alive.
-    if (progressDistance - distance >= 0.05) { progressDistance = distance; inactiveTime = 0; }
-    if (target.y < height(target.x, target.z) + 1.5) { status.state = 'blocked'; return; }
-    if (distance <= 0.15) { status.state = 'arrived'; return; }
-    if (inactiveTime >= 5) { status.state = 'blocked'; return; }
-    turnTowards(player, headingTo(player, target), dt);
-    const scale = Math.min(1, 12 * dt / distance);
-    p.x += dx * scale; p.z += dz * scale; p.y += dy * scale;
-    p.y = Math.max(p.y, height(p.x, p.z) + 1.5);
+  return result;
+}
+function record(status: NavigationStatus, command: NavigationCommand, outcome: NavigationOutcome['outcome']) {
+  status.outcomes.push({ ...command, outcome });
+  status.outcomes = status.outcomes.slice(-100);
+}
+export function createNavigation(player: Player, height: Height) {
+  let status: NavigationStatus = { state: 'idle', pending: [], outcomes: [] };
+  let nextId = 1, initialDistance = 0;
+  const motion = createMotion(player, height);
+  function clear(outcome: 'cancelled' | 'interrupted') {
+    if (status.active) record(status, status.active, outcome);
+    for (const command of status.pending) record(status, command, outcome);
+    status = { state: 'idle', pending: [], outcomes: status.outcomes };
+    rotation = undefined;
+  }
+  let rotation: number | undefined;
+  function stop() { clear('interrupted'); }
+  function start(command: NavigationCommand) {
+    status.state = 'moving'; status.active = command; status.target = command.target;
+    initialDistance = motion.start(command.target);
+  }
+  function moveTo(target: Vector, options: { queue?: boolean } = {}) {
+    validateRequest(target, options, status.pending.length);
+    if (!options.queue) stop();
+    const command = { id: nextId++, target: { x: target.x, y: target.y, z: target.z } };
+    if (status.active) status.pending.push(command);
+    else { rotation = undefined; start(command); }
+    return { accepted: true, id: command.id };
+  }
+  function finish() {
+    if (status.state === 'moving') return;
+    const outcome = status.state as 'arrived' | 'blocked' | 'failed';
+    record(status, status.active!, outcome);
+    status.active = undefined;
+    if (outcome !== 'arrived') {
+      for (const command of status.pending) record(status, command, 'cancelled');
+      status.pending = [];
+    }
+    const next = status.pending.shift();
+    if (next) start(next);
   }
   function update(dt: number) {
-    if (status.state === 'moving') { advance(dt); return true; }
+    if (status.state === 'moving') {
+      status.state = motion.step(status.target!, dt);
+      finish(); return true;
+    }
     if (rotation === undefined) return false;
     if (turnTowards(player, rotation, dt)) rotation = undefined;
     return true;
   }
-  return { stop, moveTo, update, getStatus: () => structuredClone(status),
+  return { stop, abort: () => clear('cancelled'), moveTo, update,
+    getStatus: () => snapshot(status, initialDistance, motion.distanceTo),
     rotate(target: number) { stop(); rotation = target; } };
 }

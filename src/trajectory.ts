@@ -93,7 +93,7 @@ export function createTrajectory(world: World, options: { interval?: number; max
     const nav = world.interact.getNavigationStatus();
     if (!active || status === nav.state) return;
     active.events.push({ time, state: nav.state }); status = nav.state; revision++;
-    const outcomes = { arrived: 'completed', blocked: 'blocked', idle: 'interrupted' } as const;
+    const outcomes = { arrived: 'completed', blocked: 'blocked', failed: 'blocked', idle: 'interrupted' } as const;
     if (nav.state !== 'moving') finish(outcomes[nav.state]);
   }
   function update(dt: number) {

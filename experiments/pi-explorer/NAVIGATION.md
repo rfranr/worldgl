@@ -1,0 +1,12 @@
+# Queued navigation
+
+`move_to({x,y,z})` retains replacement semantics and its immediate acknowledgement.
+`move_to({x,y,z,queue:true})` appends a destination and returns `{accepted:true,id}` immediately. Commands execute FIFO, one at a time, using the existing movement constraints. The browser API equivalent is `world.interact.moveTo({x,y,z}, {queue:true})`.
+
+At most 64 pending destinations (plus one active) are accepted. Invalid coordinates, nonboolean queue flags and overflow throw without changing navigation. Targets are copied on acceptance.
+
+`stop_movement` explicitly aborts navigation, including rotation, and clears pending commands. Browser consumers can use `world.interact.abortNavigation()`. Active and pending commands receive `cancelled` outcomes. Existing `stop()`, replacement movement, manual controls, turning, teleporting and reset interrupt navigation and clear pending commands with `interrupted` outcomes. There is no preserve-pending cancellation mode.
+
+`navigation_status` retains `state` and `target`, adding `active`, `pending`, `progress` (remaining Euclidean distance and fraction), and the most recent 100 `outcomes`, keyed by monotonically increasing command IDs. Status is a detached snapshot. Fraction measures displacement toward the current target, not elapsed time or route completion. Arrival uses the existing 0.15-unit tolerance. The next command starts only after arrival, and physically advances on a subsequent simulation tick.
+
+Terrain blockage or five seconds without meaningful progress produces `blocked`. Unexpected stepping exceptions produce `failed`. Either stops execution and cancels all pending commands; the preceding terminal outcome identifies the cause and nothing is silently skipped. New submissions after a terminal state start a new sequence. Idle after abort is retained for compatibility; outcomes distinguish cancellation from interruption. Navigation failures map to the existing blocked trajectory outcome so the experiment export schema is unchanged.
