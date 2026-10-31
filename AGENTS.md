@@ -13,9 +13,15 @@ After modifying source code:
 
 1. Run `npm run check:report`.
 2. Review ESLint violations and the cognitive complexity report.
-3. Fix violations without changing quality thresholds or disabling rules.
-4. Do not modify existing tests to make them pass.
-5. Repeat verification until all checks pass.
+3. Resolve quality violations through meaningful improvements, without weakening thresholds or suppressing rules.
+4. Fix violations without changing quality thresholds or disabling rules.
+5. Do not modify existing tests to make them pass.
+6. Repeat verification until all checks pass.
+7. Prefer cohesive modules, clear dependencies and limited shared mutable state.
+8. Report remaining violations and relevant metric changes.
+
+Do not install dependencies or modify the environment without explicit approval.
+
 
 ## Environment
 
