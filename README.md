@@ -2,6 +2,14 @@
 
 A minimal, local-only Three.js + TypeScript flight prototype. Includes deterministic low-poly terrain, a visible geometric craft, three data-defined landmarks, a following camera, and live telemetry. No backend or runtime network services.
 
+## Experiment inspector
+
+Open `inspector.html` (also linked from the simulation) to inspect local, extracted experiment directories or individual files. Nested JSON/JSONL artifacts are processed entirely in the browser, with a 20 MiB per-file limit. The production build includes both pages and supports static hosting, including subdirectories. Deploy only `dist/`, never the repository root.
+
+Pi JSONL session entries and JSON objects containing `entries` are supported. Messages, tool arguments, results, and execution errors are displayed as escaped text in session log order, including branches. WorldGL v1 trajectories reuse the existing XZ map; select a segment to view its samples, command, destination, and outcome. Summary distance is sampled 3D length within segments; duration is the retained sample span, not total experiment wall time. Empty recordings have unknown duration.
+
+Existing exports do not share tool-call identifiers or a synchronized simulation clock. Selecting a call therefore reports its trajectory association as **unknown**; command order or matching arguments are not treated as reliable evidence. Select trajectory segments independently. Multiple runs are displayed as separate artifacts, not merged. Missing files are allowed; malformed JSONL lines are reported and skipped, invalid trajectories are rejected. Archives and HTML session exports are unsupported. No imported content executes or touches the live world. Vite blocks access to `experiments/`; artifacts are not bundled.
+
 ## Run
 
 Requires Node.js 20.19+ or 22.12+ and a modern WebGL-capable browser.
@@ -14,10 +22,12 @@ npm run dev
 Open the local URL Vite prints (normally http://localhost:5173).
 
 ```sh
-npm test           # pure simulation tests, no browser required
+npm test           # simulation/data tests + Chromium interaction regression
 npm run build      # TypeScript checks + production bundle
 npm run preview    # serve the production build locally
 ```
+
+The browser regression uses the root project's Playwright dev dependency, installed by `npm ci`. Provision Chromium explicitly with `npx playwright install chromium` before running the full suite (including in CI). The test does not install dependencies or browsers and does not depend on the experiment workspace. It performs real hit-tested clicks from the live HUD into the inspector, opens the native file chooser, imports a trajectory, and selects a segment.
 
 ## Trajectory debugging (browser only)
 

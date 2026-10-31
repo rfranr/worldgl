@@ -1,0 +1,9 @@
+body { background: #17292e; color: #e4eeee; font: 16px system-ui; margin: 2rem; }
+main { max-width: 1000px; margin: auto; }
+a { color: #9cddff; }
+label { display: block; margin: 1rem 0; }
+section { border-top: 1px solid #647a80; padding: 1rem 0; }
+pre { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 32rem; overflow: auto; }
+canvas { width: 220px; height: 220px; display: block; }
+button, select { padding: .5rem; margin: .5rem; max-width: 100%; }
+summary { cursor: pointer; overflow-wrap: anywhere; }

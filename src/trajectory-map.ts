@@ -33,7 +33,7 @@ function drawPlayer(ctx: CanvasRenderingContext2D, player: ReturnType<World['ins
   ctx.beginPath(); ctx.moveTo(0, -7); ctx.lineTo(5, 5); ctx.lineTo(0, 2); ctx.lineTo(-5, 5); ctx.closePath();
   ctx.fillStyle = '#ffffff'; ctx.fill(); ctx.strokeStyle = '#18262b'; ctx.lineWidth = 1; ctx.stroke(); ctx.restore();
 }
-export function createTrajectoryMap(canvas: HTMLCanvasElement, inspect: World['inspect']) {
+export function createTrajectoryMap(canvas: HTMLCanvasElement, inspect?: World['inspect']) {
   const ctx = canvas.getContext('2d')!;
   return (history: TrajectoryHistory, state: { visible: boolean; destinationsVisible: boolean }) => {
     const ratio = Math.min(window.devicePixelRatio || 1, 2);
@@ -48,6 +48,7 @@ export function createTrajectoryMap(canvas: HTMLCanvasElement, inspect: World['i
     ctx.beginPath(); ctx.moveTo(size / 2, padding); ctx.lineTo(size / 2, size - padding);
     ctx.moveTo(padding, size / 2); ctx.lineTo(size - padding, size / 2); ctx.stroke();
     if (state.visible) history.segments.forEach(segment => drawSegment(ctx, segment, state.destinationsVisible));
+    if (!inspect) return;
     const world = inspect();
     world.objects.forEach(object => drawObject(ctx, object));
     drawPlayer(ctx, world.player);

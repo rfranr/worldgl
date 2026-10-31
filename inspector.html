@@ -1,0 +1,7 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>WorldGL experiment inspector</title></head>
+<body><main><h1>Experiment inspector</h1><a href="./index.html">Live simulation</a>
+<p>Read-only, local browser import. Select an extracted experiment directory (nested files included), or individual JSON / JSONL files. Nothing is uploaded. Each artifact is displayed independently to avoid mixing runs.</p>
+<label>Experiment directory <input type="file" webkitdirectory multiple></label>
+<label>Individual files <input type="file" multiple accept=".json,.jsonl"></label>
+<p id="status" role="status">No files imported.</p><p>Conversations use session log order, including branch entries; they are not a reconstructed active branch. Missing artifacts are allowed. Archives and HTML session exports are not supported.</p><div id="output"></div></main><script type="module" src="/src/inspector.ts"></script></body></html>
