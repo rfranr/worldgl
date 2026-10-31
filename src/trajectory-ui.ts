@@ -1,5 +1,5 @@
 import { SIZE, type World, type Vector } from './world';
-import type { createTrajectory, TrajectoryHistory } from './trajectory';
+import type { createTrajectory, TrajectoryHistory, Segment } from './trajectory';
 import { trajectoryColors } from './trajectory-colors';
 
 type API = ReturnType<typeof createTrajectory>['api'];
@@ -68,7 +68,12 @@ export function createTrajectoryUI(api: API, inspect: World['inspect']) {
     ctx.beginPath(); ctx.moveTo(size / 2, padding); ctx.lineTo(size / 2, size - padding);
     ctx.moveTo(padding, size / 2); ctx.lineTo(size - padding, size / 2); ctx.stroke();
     const state = api.getState();
-    if (state.visible) for (const segment of history.segments) {
+    if (state.visible) history.segments.forEach(segment => drawSegment(segment, state.destinationsVisible));
+    const world = inspect();
+    world.objects.forEach(drawObject);
+    drawPlayer(world.player);
+  }
+  function drawSegment(segment: Segment, destinationsVisible: boolean) {
       ctx.strokeStyle = trajectoryColors[segment.outcome]; ctx.lineWidth = 2;
       ctx.beginPath();
       segment.samples.forEach((sample, i) => {
@@ -76,16 +81,15 @@ export function createTrajectoryUI(api: API, inspect: World['inspect']) {
         if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
       });
       ctx.stroke();
-      if (state.destinationsVisible && segment.destination) {
+      if (destinationsVisible && segment.destination) {
         const [x, y] = point(segment.destination);
         ctx.beginPath(); ctx.moveTo(x, y - 4); ctx.lineTo(x + 4, y);
         ctx.lineTo(x, y + 4); ctx.lineTo(x - 4, y); ctx.closePath(); ctx.stroke();
       }
-    }
-    const world = inspect();
-    for (const object of world.objects) {
+  }
+  function drawObject(object: ReturnType<World['inspect']>['objects'][number]) {
       const [x, y] = point(object.position);
-      ctx.fillStyle = object.type === 'beacon' ? '#e4ad58' : object.type === 'rock' ? '#bbc8ce' : '#e0eacb';
+      ctx.fillStyle = { beacon: '#e4ad58', rock: '#bbc8ce', tower: '#e0eacb' }[object.type];
       if (object.type === 'rock') ctx.fillRect(x - 3, y - 3, 6, 6);
       else {
         ctx.beginPath();
@@ -93,9 +97,10 @@ export function createTrajectoryUI(api: API, inspect: World['inspect']) {
         else { ctx.moveTo(x, y - 5); ctx.lineTo(x + 4, y); ctx.lineTo(x, y + 5); ctx.lineTo(x - 4, y); ctx.closePath(); }
         ctx.fill();
       }
-    }
-    const [x, y] = point(world.player.position);
-    ctx.save(); ctx.translate(x, y); ctx.rotate(-world.player.orientation.y);
+  }
+  function drawPlayer(player: ReturnType<World['inspect']>['player']) {
+    const [x, y] = point(player.position);
+    ctx.save(); ctx.translate(x, y); ctx.rotate(-player.orientation.y);
     ctx.beginPath(); ctx.moveTo(0, -7); ctx.lineTo(5, 5); ctx.lineTo(0, 2); ctx.lineTo(-5, 5); ctx.closePath();
     ctx.fillStyle = '#ffffff'; ctx.fill(); ctx.strokeStyle = '#18262b'; ctx.lineWidth = 1; ctx.stroke(); ctx.restore();
   }

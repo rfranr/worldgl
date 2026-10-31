@@ -15,7 +15,8 @@ export interface TrajectoryAPI {
 // Observes successful public commands and post-update snapshots; never steers the world.
 export function createTrajectory(world: World, options: { interval?: number; maxSegments?: number; maxSamples?: number } = {}) {
   const interval = options.interval ?? 0.1, maxSegments = options.maxSegments ?? 64, maxSamples = options.maxSamples ?? 1000;
-  if (!(interval > 0 && Number.isFinite(interval)) || !Number.isInteger(maxSegments) || maxSegments < 1 || !Number.isInteger(maxSamples) || maxSamples < 2) throw new Error('Invalid trajectory limits');
+  const validCounts = [maxSegments, maxSamples - 1].every(value => Number.isInteger(value) && value >= 1);
+  if (!(interval > 0 && Number.isFinite(interval)) || !validCounts) throw new Error('Invalid trajectory limits');
   let time = 0, nextSample = 0, recording = false, id = 0, revision = 0;
   let active: Segment | undefined;
   let status: NavigationStatus['state'] = 'idle';
@@ -59,15 +60,17 @@ export function createTrajectory(world: World, options: { interval?: number; max
     setDestinationsVisible(visible: boolean) { view.destinations = visible; revision++; },
   };
   const view = { visible: true, destinations: true, get revision() { return revision; } };
+  function observeNavigation() {
+    const nav = world.interact.getNavigationStatus();
+    if (!active || status === nav.state) return;
+    active.events.push({ time, state: nav.state }); status = nav.state; revision++;
+    const outcomes = { arrived: 'completed', blocked: 'blocked', idle: 'interrupted' } as const;
+    if (nav.state !== 'moving') finish(outcomes[nav.state]);
+  }
   function update(dt: number) {
     time += Math.max(0, Math.min(dt, 0.05));
     if (!recording) return;
-    const nav = world.interact.getNavigationStatus();
-    if (active && status !== nav.state) {
-      active.events.push({ time, state: nav.state }); status = nav.state; revision++;
-      if (nav.state === 'arrived' || nav.state === 'blocked') finish(nav.state === 'arrived' ? 'completed' : 'blocked');
-      else if (nav.state === 'idle') finish('interrupted');
-    }
+    observeNavigation();
     if (!active) {
       // Resume sampling manual motion without joining it to a completed trip.
       const p = world.player;

@@ -137,13 +137,7 @@ export function createWorld(seed = SEED, objects: WorldObject[] = INITIAL_OBJECT
     moveObject(id: string, p: Vector) { position(p); find(id).position = { ...p }; },
     reset,
   });
-  function update(dt: number, keys: ReadonlySet<string>) {
-    finite(dt);
-    dt = Math.max(0, Math.min(dt, 0.05));
-    const axis = (positive: string, negative: string) => Number(keys.has(positive)) - Number(keys.has(negative));
-    const keyboard = ['KeyW','KeyS','KeyA','KeyD','KeyQ','KeyE','Space','ShiftLeft','ShiftRight'].some(k => keys.has(k));
-    if (keyboard) stop();
-    if (navigation.state === 'moving') {
+  function advanceNavigation(dt: number) {
       inactiveTime += dt;
       const target = navigation.target!, p = player.position;
       const dx = target.x - p.x, dy = target.y - p.y, dz = target.z - p.z;
@@ -161,6 +155,15 @@ export function createWorld(seed = SEED, objects: WorldObject[] = INITIAL_OBJECT
         p.x += dx * scale; p.z += dz * scale; p.y += dy * scale;
         p.y = Math.max(p.y, terrain.height(p.x, p.z) + 1.5);
       }
+  }
+  function update(dt: number, keys: ReadonlySet<string>) {
+    finite(dt);
+    dt = Math.max(0, Math.min(dt, 0.05));
+    const axis = (positive: string, negative: string) => Number(keys.has(positive)) - Number(keys.has(negative));
+    const keyboard = ['KeyW','KeyS','KeyA','KeyD','KeyQ','KeyE','Space','ShiftLeft','ShiftRight'].some(k => keys.has(k));
+    if (keyboard) stop();
+    if (navigation.state === 'moving') {
+      advanceNavigation(dt);
       return;
     }
     if (rotation !== undefined) {

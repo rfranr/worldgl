@@ -31,10 +31,16 @@ scene.add(sun);
 
 const terrain = createTerrain(SEED);
 const vertices: number[] = [], colors: number[] = [];
+function terrainColor(height: number) {
+  if (height < -3) return '#687e79';
+  if (height < 3) return '#8b9d62';
+  if (height < 7) return '#a5ad79';
+  return '#c5ba99';
+}
 function triangle(points: [number, number][]) {
   const heights = points.map(([x, z]) => terrain.vertexHeight(x, z));
   const average = heights.reduce((a, b) => a + b, 0) / 3;
-  const color = new THREE.Color(average < -3 ? '#687e79' : average < 3 ? '#8b9d62' : average < 7 ? '#a5ad79' : '#c5ba99');
+  const color = new THREE.Color(terrainColor(average));
   points.forEach(([x, z], i) => { vertices.push(x, heights[i], z); colors.push(color.r, color.g, color.b); });
 }
 for (let x = -SIZE / 2; x < SIZE / 2; x += CELL) {
@@ -55,7 +61,7 @@ const factories = {
   tower: () => new THREE.Mesh(new THREE.BoxGeometry(3, 10, 3).translate(0, 5, 0), material('#d0d7c7')),
 };
 const objectMeshes = new Map<string, THREE.Mesh>();
-function syncObjects() {
+function removeStaleObjects() {
   for (const [id, mesh] of objectMeshes) {
     if (!world.objects.some(o => o.id === id && o.type === mesh.userData.type)) {
       scene.remove(mesh);
@@ -64,6 +70,9 @@ function syncObjects() {
       objectMeshes.delete(id);
     }
   }
+}
+function syncObjects() {
+  removeStaleObjects();
   for (const object of world.objects) {
     let mesh = objectMeshes.get(object.id);
     if (!mesh) {
