@@ -2,6 +2,6 @@
   "name": "worldgl-pi-explorer",
   "private": true,
   "type": "module",
-  "scripts": { "start": "node launch.mjs", "test": "node --test test.mjs", "smoke": "node smoke.mjs" },
+  "scripts": { "start": "node launch.mjs", "test": "node --test test.mjs *.test.mjs", "smoke": "node smoke.mjs" },
   "dependencies": { "playwright": "^1.58.2" }
 }

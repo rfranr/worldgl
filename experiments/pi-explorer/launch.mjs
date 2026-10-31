@@ -24,6 +24,32 @@ function listModels() {
     }));
 }
 
+async function chooseModel(rl, matches) {
+  console.log('\n0. Use Pi default model');
+  matches.forEach((model, index) => console.log(`${index + 1}. ${model.id}`));
+  const choice = (await rl.question('\nSelect model number: ')).trim();
+  if (choice === '0') return null;
+  const number = Number(choice);
+  if (!/^[1-9]\d*$/.test(choice) || number > matches.length) {
+    console.log('Invalid selection.');
+    return undefined;
+  }
+  return matches[number - 1];
+}
+
+async function filterModels(rl, models) {
+  while (true) {
+    const filter = (await rl.question('\nFilter models (Enter = all): ')).trim().toLowerCase();
+    const matches = models.filter(model => model.id.toLowerCase().includes(filter));
+    if (!matches.length) {
+      console.log('No matching models.');
+      continue;
+    }
+    const selected = await chooseModel(rl, matches);
+    if (selected !== undefined) return selected;
+  }
+}
+
 async function selectModel() {
   const rl = createInterface({
     input: process.stdin,
@@ -37,43 +63,7 @@ async function selectModel() {
       throw new Error('Pi returned no models.');
     }
 
-    while (true) {
-      const filter = (
-        await rl.question('\nFilter models (Enter = all): ')
-      ).trim().toLowerCase();
-
-      const matches = models.filter(m =>
-        m.id.toLowerCase().includes(filter)
-      );
-
-      if (!matches.length) {
-        console.log('No matching models.');
-        continue;
-      }
-
-      console.log('\n0. Use Pi default model');
-
-      matches.forEach((m, index) => {
-        console.log(`${index + 1}. ${m.id}`);
-      });
-
-      const choice = (
-        await rl.question('\nSelect model number: ')
-      ).trim();
-
-      if (choice === '0') return null;
-
-      const number = Number(choice);
-      if (
-        !/^[1-9]\d*$/.test(choice) ||
-        number > matches.length
-      ) {
-        console.log('Invalid selection.');
-        continue;
-      }
-
-      return matches[number - 1];
-    }
+    return await filterModels(rl, models);
   } finally {
     rl.close();
   }

@@ -7,15 +7,16 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "test": "tsx --test tests/*.test.ts",
-    "lint": "eslint src/",
+    "test": "tsx --test tests/*.test.ts && npm run test:explorer",
+    "test:explorer": "node --test experiments/pi-explorer/test.mjs experiments/pi-explorer/*.test.mjs",
+    "lint": "eslint src/ experiments/pi-explorer/ scripts/check-report.mjs",
     "complexity": "node scripts/complexity-report.mjs",
-    "metrics": "tsmetrics analyze ./src",
-    "metrics:html": "tsmetrics analyze ./src --format html > metrics.html",
-    "dependencies": "depcruise --config .dependency-cruiser.cjs -T err src/",
-    "structure": "depcruise --no-config -T json src/ | node scripts/structure.cjs",
+    "metrics": "tsmetrics analyze ./src ./experiments/pi-explorer",
+    "metrics:html": "tsmetrics analyze ./src ./experiments/pi-explorer --format html > metrics.html",
+    "dependencies": "depcruise --config .dependency-cruiser.cjs -T err src/ experiments/pi-explorer/*.mjs experiments/pi-explorer/*.ts",
+    "structure": "depcruise --no-config --include-only '^(src/|experiments/pi-explorer/)(?!node_modules/)' -T json src/ experiments/pi-explorer/*.mjs experiments/pi-explorer/*.ts | node scripts/structure.cjs",
     "check": "npm run lint && npm test && npm run build",
-    "check:report": "npm run check; result=$?; npm run complexity; npm run metrics; npm run dependencies; npm run structure; exit $result"
+    "check:report": "node scripts/check-report.mjs"
   },
   "dependencies": {
     "three": "^0.180.0"

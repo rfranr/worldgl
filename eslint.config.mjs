@@ -17,6 +17,26 @@ export default tseslint.config(
     },
   },
   {
+    files: ["experiments/pi-explorer/**/*.mjs"],
+    languageOptions: {
+      globals: {
+        // Node runtime globals used by the adapter and its tests.
+        process: "readonly",
+        console: "readonly",
+        URL: "readonly",
+        AbortController: "readonly",
+        AbortSignal: "readonly",
+        setTimeout: "readonly",
+        clearTimeout: "readonly",
+      },
+    },
+  },
+  {
+    // These modules also contain self-contained Playwright page callbacks.
+    files: ["experiments/pi-explorer/core.mjs", "experiments/pi-explorer/export.mjs"],
+    languageOptions: { globals: { window: "readonly" } },
+  },
+  {
     files: ["src/world.ts", "src/trajectory.ts"],
     rules: {
       "sonarjs/cognitive-complexity": ["error", 10],

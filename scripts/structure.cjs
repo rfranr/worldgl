@@ -2,11 +2,13 @@ const fs = require('node:fs');
 
 const report = JSON.parse(fs.readFileSync(0, 'utf8'));
 
+const isProjectModule = source => /^(src\/|experiments\/pi-explorer\/)(?!node_modules\/)/.test(source ?? '');
+
 const graph = new Map(
-  report.modules.map(m => [
+  report.modules.filter(m => isProjectModule(m.source)).map(m => [
     m.source,
     (m.dependencies ?? [])
-      .filter(d => d.resolved?.startsWith('src/'))
+      .filter(d => isProjectModule(d.resolved))
       .map(d => d.resolved)
   ])
 );

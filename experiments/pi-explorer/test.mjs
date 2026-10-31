@@ -3,7 +3,13 @@ import assert from 'node:assert/strict';
 import { WorldBrowser, validate, names, worldOperation, format } from './core.mjs';
 
 test('strict finite arguments and bounds', () => {
-  for (const name of names) validate(name, { execute_route: { waypoints: [{ x: 0, y: 2, z: 3 }] } }[name] ?? (['move_to', 'look_at'].includes(name) ? { x: 0, y: 2, z: 3 } : name === 'turn_by' ? { radians: 1 } : {}));
+  const valid = {
+    execute_route: { waypoints: [{ x: 0, y: 2, z: 3 }] },
+    move_to: { x: 0, y: 2, z: 3 },
+    look_at: { x: 0, y: 2, z: 3 },
+    turn_by: { radians: 1 },
+  };
+  for (const name of names) validate(name, valid[name] ?? {});
   for (const args of [null, [], { forward: NaN }, { right: Infinity }, { up: '1' }, { script: 'x' }]) assert.throws(() => validate('move_by', args));
   for (const args of [{}, { x: 119, y: 0, z: 0 }, { x: 0, y: -66, z: 0 }]) assert.throws(() => validate('move_to', args));
   for (const args of [{}, { waypoints: [] }, { waypoints: [{ x: 119, y: 2, z: 0 }] }, { waypoints: [{ x: 0, y: 2, z: 0, queue: true }] }]) assert.throws(() => validate('execute_route', args));
@@ -18,7 +24,7 @@ test('all eight fixed API mappings and response formatting', async () => {
     interact: {
       moveBy: args => calls.push(['moveBy', args]), moveTo: args => calls.push(['moveTo', args]),
       executeRoute: waypoints => { calls.push(['executeRoute', waypoints]); return { accepted: true, id: 42, commandIds: [42, 43] }; },
-      getNavigationStatus: () => { calls.push(['status']); return { state: 'moving' }; },
+      getNavigationStatus: () => { calls.push(['status']); return { state: 'arrived', route: { id: 42, commandIds: [42, 43], state: 'arrived', completed: 2, outcomes: [{ id: 42, outcome: 'arrived' }, { id: 43, outcome: 'arrived' }] } }; },
       stop: () => calls.push(['stop']),
       turnBy: args => calls.push(['turnBy', args]), lookAt: args => calls.push(['lookAt', args]),
     },
@@ -31,8 +37,8 @@ test('all eight fixed API mappings and response formatting', async () => {
       inspect_world: [{}, { seed: 213 }],
       move_by: [{ forward: 2 }, { accepted: true }],
       move_to: [{ x: 1, y: 2, z: 3 }, { accepted: true }],
-      execute_route: [{ waypoints: [{ x: 1, y: 2, z: 3 }, { x: 4, y: 2, z: 3 }] }, { accepted: true, id: 42, commandIds: [42, 43] }],
-      navigation_status: [{}, { state: 'moving' }],
+      execute_route: [{ waypoints: [{ x: 1, y: 2, z: 3 }, { x: 4, y: 2, z: 3 }] }, { id: 42, commandIds: [42, 43], state: 'completed', completed: 2, outcomes: [{ id: 42, outcome: 'arrived' }, { id: 43, outcome: 'arrived' }] }],
+      navigation_status: [{}, { state: 'arrived', route: { id: 42, commandIds: [42, 43], state: 'arrived', completed: 2, outcomes: [{ id: 42, outcome: 'arrived' }, { id: 43, outcome: 'arrived' }] } }],
       stop_movement: [{}, { stopped: true }],
       turn_by: [{ radians: Math.PI / 2 }, { accepted: true }],
       look_at: [{ x: 10, y: 20, z: 30 }, { accepted: true }],
@@ -42,7 +48,7 @@ test('all eight fixed API mappings and response formatting', async () => {
       const [input, expected] = fixtures[name];
       assert.deepEqual(await browser.call(name, input), format(expected));
     }
-    assert.deepEqual(calls, [['inspect'], ['moveBy', fixtures.move_by[0]], ['moveTo', fixtures.move_to[0]], ['executeRoute', fixtures.execute_route[0].waypoints], ['status'], ['stop'], ['turnBy', fixtures.turn_by[0]], ['lookAt', fixtures.look_at[0]]]);
+    assert.deepEqual(calls, [['inspect'], ['moveBy', fixtures.move_by[0]], ['moveTo', fixtures.move_to[0]], ['executeRoute', fixtures.execute_route[0].waypoints], ['status'], ['status'], ['stop'], ['turnBy', fixtures.turn_by[0]], ['lookAt', fixtures.look_at[0]]]);
     assert.equal(format({ ok: true }).content[0].text, '{"ok":true}');
     assert.throws(() => worldOperation({ name: 'eval', args: {} }));
   } finally { delete globalThis.window; }

@@ -18,7 +18,7 @@ const analyzer = new ESLint({
 // Separate instance to read actual project thresholds.
 const configured = new ESLint();
 
-const results = await analyzer.lintFiles(["src/"]);
+const results = await analyzer.lintFiles(["src/", "experiments/pi-explorer/"]);
 const rows = [];
 
 for (const result of results) {
