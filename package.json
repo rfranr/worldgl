@@ -12,8 +12,9 @@
     "complexity": "node scripts/complexity-report.mjs",
     "metrics": "tsmetrics analyze ./src",
     "metrics:html": "tsmetrics analyze ./src --format html > metrics.html",
+    "dependencies": "depcruise --config .dependency-cruiser.cjs -T err src/",
     "check": "npm run lint && npm test && npm run build",
-    "check:report": "npm run check; result=$?; npm run complexity; npm run metrics; exit $result"
+    "check:report": "npm run check; result=$?; npm run complexity; npm run metrics; npm run dependencies; exit $result"
   },
   "dependencies": {
     "three": "^0.180.0"
@@ -22,6 +23,7 @@
     "@eslint/js": "^10.0.1",
     "@types/node": "^24.0.0",
     "@types/three": "^0.180.0",
+    "dependency-cruiser": "^18.7.0",
     "eslint": "^10.14.0",
     "eslint-plugin-sonarjs": "^4.2.2",
     "tsmetrics": "^0.4.0",

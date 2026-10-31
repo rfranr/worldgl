@@ -19,7 +19,8 @@ After modifying source code:
 6. Repeat verification until all checks pass.
 7. Prefer cohesive modules, clear dependencies and limited shared mutable state.
 8. Report remaining violations and relevant metric changes.
-
+9. Review the dependency report for circular dependencies and architectural issues.
+    
 Do not install dependencies or modify the environment without explicit approval.
 
 
