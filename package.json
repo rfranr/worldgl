@@ -13,8 +13,9 @@
     "metrics": "tsmetrics analyze ./src",
     "metrics:html": "tsmetrics analyze ./src --format html > metrics.html",
     "dependencies": "depcruise --config .dependency-cruiser.cjs -T err src/",
+    "structure": "depcruise --no-config -T json src/ | node scripts/structure.cjs",
     "check": "npm run lint && npm test && npm run build",
-    "check:report": "npm run check; result=$?; npm run complexity; npm run metrics; npm run dependencies; exit $result"
+    "check:report": "npm run check; result=$?; npm run complexity; npm run metrics; npm run dependencies; npm run structure; exit $result"
   },
   "dependencies": {
     "three": "^0.180.0"
