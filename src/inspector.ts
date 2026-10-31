@@ -2,6 +2,9 @@ import { record, blocks, parseSession, parseTrajectory, sessionSummary, analyzeT
 import { createTrajectoryMap } from './trajectory-map';
 import type { TrajectoryHistory } from './trajectory';
 import './inspector.css';
+import { createComparison } from './comparison';
+
+createComparison(document.querySelector<HTMLElement>('#comparison')!);
 
 const output = document.querySelector<HTMLElement>('#output')!;
 function text(parent: HTMLElement, tag: string, value: string) {
@@ -77,6 +80,6 @@ async function importFiles(input: HTMLInputElement) {
   }
   if (current === generation) status.textContent = `Import complete. ${association()}`;
 }
-document.querySelectorAll<HTMLInputElement>('input[type=file]').forEach(input => {
+document.querySelectorAll<HTMLInputElement>('input[data-inspector]').forEach(input => {
   input.addEventListener('change', () => { void importFiles(input); });
 });

@@ -7,3 +7,10 @@ pre { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 32rem; overflo
 canvas { width: 220px; height: 220px; display: block; }
 button, select { padding: .5rem; margin: .5rem; max-width: 100%; }
 summary { cursor: pointer; overflow-wrap: anywhere; }
+#comparison svg { width: 100%; background: #f4f4f4; border: 1px solid #647a80; }
+#comparison polyline { cursor: pointer; }
+#comparison polyline:focus, #comparison polyline:hover { stroke-width: 8; }
+.comparison-lane { display: flex; overflow-x: auto; border: 1px solid #647a80; max-height: 18rem; }
+.comparison-lane > * { flex: 0 0 15rem; border-right: 1px solid #647a80; }
+.comparison-lane button { text-align: left; }
+
