@@ -22,12 +22,21 @@ const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.setSize(innerWidth, innerHeight);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 document.body.prepend(renderer.domElement);
 const camera = new THREE.PerspectiveCamera(58, innerWidth / innerHeight, 0.1, 400);
 scene.add(new THREE.HemisphereLight(0xe8f6ff, 0x536044, 2));
 const sun = new THREE.DirectionalLight(0xffe5b5, 2.5);
-sun.position.set(-40, 70, 20);
-scene.add(sun);
+const sunlightOffset = new THREE.Vector3(-40, 70, 20);
+sun.position.copy(sunlightOffset);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+// A local shadow volume follows the craft, rather than covering the entire map.
+Object.assign(sun.shadow.camera, { left: -24, right: 24, top: 24, bottom: -24, near: 0.5, far: 220 });
+sun.shadow.camera.updateProjectionMatrix();
+sun.shadow.normalBias = 0.04;
+scene.add(sun, sun.target);
 
 const terrain = createTerrain(SEED);
 const vertices: number[] = [], colors: number[] = [];
@@ -53,7 +62,9 @@ const geometry = new THREE.BufferGeometry();
 geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
 geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
 geometry.computeVertexNormals();
-scene.add(new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: true, roughness: 1 })));
+const terrainMesh = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: true, roughness: 1 }));
+terrainMesh.receiveShadow = true;
+scene.add(terrainMesh);
 const material = (color: string) => new THREE.MeshStandardMaterial({ color, flatShading: true, roughness: 0.8 });
 const factories = {
   beacon: () => new THREE.Mesh(new THREE.CylinderGeometry(0.6, 1.4, 7, 6).translate(0, 3.5, 0), material('#e4ad58')),
@@ -93,6 +104,8 @@ hull.rotation.x = -Math.PI / 2;
 player.add(hull);
 const wings = new THREE.Mesh(new THREE.BoxGeometry(3.5, 0.18, 0.8), material('#f3dfb7'));
 player.add(wings);
+hull.castShadow = true;
+wings.castShadow = true;
 scene.add(player);
 const keys = new Set<string>();
 const controls = new Set(['KeyW','KeyS','KeyA','KeyD','KeyQ','KeyE','Space','ShiftLeft','ShiftRight','KeyR']);
@@ -137,6 +150,9 @@ renderer.setAnimationLoop(now => {
   syncObjects();
   player.position.copy(world.player.position);
   player.rotation.y = world.player.orientation.y;
+  // Move both endpoints together to preserve the existing sunlight direction.
+  sun.target.position.copy(player.position);
+  sun.position.copy(player.position).add(sunlightOffset);
   follow(false, dt);
   if (now >= nextTelemetry) {
     const { player: p, objects } = world.inspect();
