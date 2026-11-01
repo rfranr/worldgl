@@ -4,14 +4,14 @@ Minimal experiment for installed Pi **1.4.0**. Uses Pi's existing model selectio
 
 ## Observation
 
-`inspect_world` uses the browser's perception-backed `world.inspect()`: only object centers within a 90° horizontal field of view and 60 world units (3D distance) are returned, including boundaries. Y is up; yaw zero faces −Z and positive yaw turns left. Turn or move to discover objects; previous sightings are not retained. There is no terrain occlusion or vertical field-of-view filtering. Snapshots are detached copies and do not change the simulation. The internal simulation retains all objects through `world.inspect()` on the simulation instance; that full snapshot is not exposed by the agent-facing browser API.
+`inspect_world` uses the browser's perception-backed `world.inspect()`: only object centers within a 90° horizontal field of view and 60 world units (3D distance) are returned, including boundaries. Y is up; yaw zero faces −Z and positive yaw turns left. Turn or move to discover objects; previous sightings are not retained. There is no terrain occlusion. Vertical field of view is 90°, with inclusive boundaries; pitch affects visibility. Snapshots are detached copies and do not change the simulation. The internal simulation retains all objects through `world.inspect()` on the simulation instance; that full snapshot is not exposed by the agent-facing browser API.
 
 ## Setup and run
 
 From the repository root, start worldgl:
 
 ```sh
-npm install
+npm ci
 npm run dev -- --host 127.0.0.1
 ```
 
@@ -32,7 +32,7 @@ npm start
 
 A graphical desktop/display is required: Chromium is deliberately **not headless**. Default URL: `http://localhost:5173`. Override with `WORLDGL_URL=http://127.0.0.1:5174 npm start` if necessary. Only local HTTP(S) URLs are accepted.
 
-1. Check the startup notification lists exactly `inspect_world`, `move_by`, `move_to`, `navigation_status`, `stop_movement`, `turn_by`, `look_at`.
+1. Check the startup notification lists exactly `inspect_world`, `move_by`, `move_to`, `execute_route`, `navigation_status`, `stop_movement`, `turn_by`, `look_at`.
 2. Select an already configured model with Pi's `/model` selector (existing Pi authentication is reused).
 3. Paste the contents of [prompt.md](prompt.md) into Pi and submit.
 4. Watch Chromium while the agent operates. Avoid keyboard movement/manual navigation, which can interfere with the experiment.
@@ -44,7 +44,7 @@ A graphical desktop/display is required: Chromium is deliberately **not headless
 
 The launcher uses `--no-builtin-tools`, `--no-extensions` (except this explicit extension), `--no-mcp`, `--no-skills`, `--no-prompt-templates`, and `--no-context-files`, in a fresh temporary working directory. It supplies a non-coding system prompt and starts a fresh ephemeral session. No repository contents are passed to the model.
 
-The extension explicitly sets and checks the five-tool active set at session startup and before each agent run, and blocks any other tool call. There is no DOM, shell, file, arbitrary JavaScript, or unrestricted Playwright tool. Only a fixed page-evaluation function dispatches the five public world operations.
+The extension explicitly sets and checks the eight-tool active set at session startup and before each agent run, and blocks any other tool call. There is no DOM, shell, file, arbitrary JavaScript, or unrestricted Playwright tool. Only a fixed page-evaluation function dispatches the eight public world operations.
 
 This is **tool-level isolation, not an OS security sandbox**. The trusted extension itself has normal process permissions; Pi's human-operated UI is not sandboxed. Do not load other extensions or attach repository files to this experiment.
 
@@ -84,7 +84,11 @@ npm run smoke # optional: running worldgl + graphical display + Chromium require
 
 Neither command makes model API calls. Smoke opens real visible Chromium, observes actual state, initiates movement, checks position changes, replaces a destination, checks navigation, and stops movement in the same session.
 
-## Verification report
+## Historical verification report
+
+These are earlier implementation-time observations, not checks repeated for the
+public documentation review. Tool-count and test-count statements below describe
+that earlier adapter version. See [current validation](../../docs/validation.md).
 
 - Installed Pi 1.4.0 CLI flags checked with `pi --help`.
 - Three focused unit tests passed.
