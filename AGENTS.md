@@ -39,4 +39,17 @@ Report:
 - Number of remaining violations.
 - Test and build results.
 
+## Development tooling
+
+Pi is the primary AI coding agent.
+
+Project-specific Pi packages are declared in `.pi/settings.json`.
+
+Additional optional skill:
+
+- Technical Documentation
+  - Source: `magnus919/agent-skills`
+  - Install:
+    `npx skills add magnus919/agent-skills --skill technical-documentation --agent pi --global`
+
 Never claim verification succeeded unless the checks were actually executed.
