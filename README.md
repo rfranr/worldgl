@@ -6,6 +6,10 @@ It includes a browser simulation and a local experiment inspector.
 The simulation needs no backend or runtime network service; the optional Pi
 experiment uses your configured model provider.
 
+![Third-person craft above faceted terrain, with geometric landmarks, player telemetry, recorded paths and a north-up minimap.](docs/assets/world-overview.png)
+
+*WorldGL’s flight environment, with terrain, landmarks and live telemetry.*
+
 ## Implemented today
 
 - Deterministic low-poly terrain, a geometric craft and three initial landmarks.
@@ -38,6 +42,19 @@ Click back into the scene after using debug controls to resume keyboard flight.
 Open the HUD's **Inspect recorded experiments** link, or `/inspector.html`,
 to load local extracted JSON/JSONL artifacts. Imports stay in the browser.
 Deploy only the built `dist/` directory, never the repository root.
+
+## Agent-driven navigation
+
+The optional [Pi explorer](experiments/pi-explorer/README.md) connects your
+configured model to WorldGL through a restricted set of tools. The agent uses
+`inspect_world` for perception-limited observations, requests movement with
+`move_to` or `execute_route`, and reads navigation status to check progress.
+Tool requests express intended actions; returned outcomes report execution.
+
+![Pi terminal with inspect_world and execute_route calls beside WorldGL showing the craft, recorded paths and minimap.](docs/assets/pi-agent-navigation.png)
+
+*Pi tool calls and returned route outcomes alongside the WorldGL scene.
+The agent's completion statement is not an independent evaluation of exploration success.*
 
 ## Development checks
 

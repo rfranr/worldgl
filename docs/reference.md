@@ -55,6 +55,10 @@ trajectory.setDestinationsVisible(false); // true to show destination diamonds
 trajectory.clear(); // history/overlay only; does not reset the world
 ```
 
+![Browser console showing the result of window.worldDebug.trajectory.getHistory(), with one active recordingStarted segment and an expanded array of 1,000 samples.](assets/trajetctory-debugging.png)
+
+*Inspect the recorder’s retained history in the browser console, including segment outcomes and sampled data.*
+
 Lines/destination diamonds are blue while active, green when completed, amber when interrupted (including recording stopped), and red when blocked. Successive commands remain separate, even for identical destinations. Recording can start during an existing trip; its earlier command arguments are then unavailable, but the current destination is captured.
 
 Samples contain simulation timestamps in seconds, absolute XYZ positions and Euler orientations in radians (Y up). Sampling is every 0.1 simulation seconds, plus segment boundaries; simulation time advances only with world updates, not wall time. Each segment stores its command/arguments, destination, outcome and timestamped status events including `arrived` and `blocked`. History retains the newest 64 segments and newest 1,000 samples per segment; older data is discarded. `startedAt` is an ISO wall-clock timestamp for the history. The versioned JSON has no Three.js dependencies.

@@ -8,6 +8,10 @@
 2. Choose an extracted directory or individual JSON/JSONL files. ZIP archives and HTML session exports are not supported; extract archives first.
 3. Read the import warnings and summary, then select session entries or trajectory segments to inspect the recorded data.
 
+![Local experiment inspector showing a recorded XZ path, trajectory summary, segment selector and export metadata.](assets/experiment-inspector.png)
+
+*Inspect retained trajectory measurements and paths; use the segment selector to examine individual commands and outcomes.*
+
 Imports are processed locally, with a 20 MiB per-file limit. Imported text is escaped, never executed, and cannot control the live simulation. Missing files are allowed; malformed JSONL lines are skipped with warnings, while invalid trajectories are rejected. See [supported formats and retention](reference.md#experiment-inspector).
 
 ## Compare runs
@@ -20,6 +24,14 @@ In **Compare experiments**, add each export separately, or select a parent direc
 - Use **Pin selected evidence** to retain choices side by side; **Clear pins** removes them.
 
 For example, load two exports of the same mission, select a destination command in each run and pin both. Compare their recorded arguments and outcomes. Check the manifests and prompts yourself for compatible seeds, missions and coordinate frames before interpreting a path difference.
+
+![Three experiment runs loaded, with two visible as red and purple overlaid XZ paths and a table of sampled measurements.](assets/experiment-comparison.png)
+
+*Compare retained paths and sampled measurements, using visibility controls to choose which runs to display.*
+
+![Two pinned session entries from different experiment runs displayed side by side, above Pin selected evidence and Clear pins controls.](assets/experiment-comparison-pin-evidence.png)
+
+*Pin recorded evidence side by side; pins are human-selected comparisons, not proof that events correspond.*
 
 ## Interpretation boundaries
 
