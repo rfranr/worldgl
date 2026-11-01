@@ -2,6 +2,10 @@
 
 Minimal experiment for installed Pi **1.4.0**. Uses Pi's existing model selection and credentials; no agent loop or model SDK. The world simulation is unchanged.
 
+## Observation
+
+`inspect_world` uses the browser's perception-backed `world.inspect()`: only object centers within a 90° horizontal field of view and 60 world units (3D distance) are returned, including boundaries. Y is up; yaw zero faces −Z and positive yaw turns left. Turn or move to discover objects; previous sightings are not retained. There is no terrain occlusion or vertical field-of-view filtering. Snapshots are detached copies and do not change the simulation. The internal simulation retains all objects through `world.inspect()` on the simulation instance; that full snapshot is not exposed by the agent-facing browser API.
+
 ## Setup and run
 
 From the repository root, start worldgl:

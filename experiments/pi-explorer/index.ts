@@ -18,7 +18,7 @@ function registerWorldTools(pi: ExtensionAPI, browser: WorldBrowser) {
   };
   const descriptions = {
     execute_route: 'Replace navigation with 1–65 ordered waypoints. Waits asynchronously for completion or termination, returning final state, completed waypoint count and outcomes. Ten-minute timeout; stop_movement cancels the route.',
-    inspect_world: 'Observe the current world state: seed, player and objects. Y is up.',
+    inspect_world: 'Observe seed, player and currently visible objects: 90° horizontal field of view, 60 world-unit range. Turn or move to discover objects. Y is up.',
     move_by: 'Start asynchronous movement relative to player heading: forward, right, up, in world units. Omitted components default to zero. Replaces any previous destination; returns immediately.',
     move_to: 'Start asynchronous movement to absolute x, y, z coordinates. Defaults to replacing movement; queue:true appends (64 pending maximum). Returns acceptance and command ID immediately.',
     navigation_status: 'Read navigation state (idle, moving, arrived, blocked) and optional target. Does not wait for arrival.',

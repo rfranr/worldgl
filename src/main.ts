@@ -13,7 +13,8 @@ const world = createWorld();
 const trajectory = createTrajectory(world);
 window.worldDebug = Object.freeze({ trajectory: trajectory.api });
 const syncTrajectoryUI = createTrajectoryUI(window.worldDebug.trajectory, world.inspect);
-window.world = Object.freeze({ inspect: world.inspect, terrainHeight: world.terrainHeight, interact: trajectory.interact });
+// The browser-facing inspection API exposes perception, not the full simulation snapshot.
+window.world = Object.freeze({ inspect: world.observe, terrainHeight: world.terrainHeight, interact: trajectory.interact });
 const scene = new THREE.Scene();
 const syncTrajectory = createTrajectoryView(scene, trajectory);
 scene.background = new THREE.Color('#bacfcf');

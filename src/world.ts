@@ -1,5 +1,6 @@
 import { finite, fly, keyboardControls } from './flight';
 import { createInteractions } from './world-interactions';
+import { perceive } from './perception';
 
 import { CELL, SEED, type WorldObject } from './world-model';
 
@@ -50,6 +51,7 @@ export function createWorld(seed = SEED, objects: WorldObject[] = INITIAL_OBJECT
     fly({ player, height: terrain.height }, keyboard ? keyboardControls(keys) : interact.getControls(), dt);
   }
   return { player, objects: landmarks, terrainHeight: terrain.height, update, reset: interact.reset, interact,
+    observe: () => ({ seed, ...perceive(player, landmarks) }),
     inspect: () => structuredClone({ seed, player, objects: landmarks }) };
 }
 export type World = ReturnType<typeof createWorld>;
