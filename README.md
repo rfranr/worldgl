@@ -6,6 +6,8 @@ It includes a browser simulation and a local experiment inspector.
 The simulation needs no backend or runtime network service; the optional Pi
 experiment uses your configured model provider.
 
+WorldGL explores how AI agents interact with a shared environment through constrained interfaces. The goal is to experiment with different levels of perception, available tools, and navigation semantics, observing how these constraints influence agent behavior. The world remains the same, but what an agent can perceive and do may differ.
+
 ![Third-person craft above faceted terrain, with geometric landmarks, player telemetry, recorded paths and a north-up minimap.](docs/assets/world-overview.png)
 
 *WorldGL’s flight environment, with terrain, landmarks and live telemetry.*
