@@ -88,6 +88,8 @@ window.world.inspect().objects         // id, type, position, orientation
 window.world.terrainHeight(10, -20)     // exact triangulated surface height
 ```
 
+Perception (`observe()` / `inspect_world`) filters object centers by 3D distance (maximum 60 units), horizontal FOV (90°), and vertical FOV (90°), with inclusive boundaries and no occlusion. Orientation Y is yaw; orientation X is pitch in radians (positive looks up). `lookAt` sets pitch immediately while yaw turns at the existing rate. Navigation and movement remain yaw-based; roll does not affect perception.
+
 The top-right panel demonstrates this same API. Snapshots can be modified without changing the simulation. Coordinates use Y up; heading zero faces negative Z. Terrain queries are defined outside the visible map as well, but the craft stays within it.
 
 ## Interaction API

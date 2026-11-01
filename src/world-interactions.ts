@@ -1,5 +1,5 @@
 import type { FlightControls, Vector, WorldObject } from './world-model';
-import { finite, headingTo, position, vector, zeroControls, type Height, type Player } from './flight';
+import { elevationTo, finite, headingTo, position, vector, zeroControls, type Height, type Player } from './flight';
 import { createNavigation } from './navigation';
 
 function objectInteractions(landmarks: WorldObject[]) {
@@ -73,7 +73,11 @@ export function createInteractions({ player, height, landmarks }: { player: Play
     moveTo, stop, reset, getNavigationStatus: navigation.getStatus,
     abortNavigation() { controls.clear(); navigation.abort(); return { stopped: true }; },
     turnBy({ radians }: { radians: number }) { finite(radians); stop(); navigation.rotate(player.orientation.y + radians); },
-    lookAt(target: Vector) { vector(target); stop(); navigation.rotate(headingTo(player, target)); },
+    lookAt(target: Vector) {
+      vector(target); stop();
+      player.orientation.x = elevationTo(player, target);
+      navigation.rotate(headingTo(player, target));
+    },
     moveBy(displacement: { forward?: number; right?: number; up?: number }) { moveTo(displacementTarget(player, displacement)); },
     setPlayerPosition(p: Vector) {
       position(p); stop(); Object.assign(player.position, p);

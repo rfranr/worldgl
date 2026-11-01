@@ -14,6 +14,10 @@ export function headingTo(player: Player, target: Vector) {
   const dx = target.x - player.position.x, dz = target.z - player.position.z;
   return Math.hypot(dx, dz) > 1e-9 ? Math.atan2(-dx, -dz) : player.orientation.y;
 }
+export function elevationTo(player: Player, target: Vector) {
+  const dx = target.x - player.position.x, dy = target.y - player.position.y, dz = target.z - player.position.z;
+  return Math.hypot(dx, dy, dz) > 1e-9 ? Math.atan2(dy, Math.hypot(dx, dz)) : player.orientation.x;
+}
 export function turnTowards(player: Player, target: number, dt: number) {
   const delta = Math.atan2(Math.sin(target - player.orientation.y), Math.cos(target - player.orientation.y));
   const step = 1.8 * dt;

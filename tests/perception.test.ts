@@ -52,3 +52,20 @@ test('observation is detached and does not change the simulation or navigation',
   tick(world, 3);
   assert.equal(world.interact.getNavigationStatus().state, 'arrived');
 });
+
+test('vertical bounds are inclusive and pitch changes perception', () => {
+  const world = createWorld(213, [object('level', 0, -10),
+    object('upper-edge', 0, -10, 60), object('lower-edge', 0, -10, 40),
+    object('high', 0, -10, 61), object('low', 0, -10, 39)]);
+  world.interact.setPlayerPosition({ x: 0, y: 50, z: 0 });
+  assert.deepEqual(ids(world), ['level', 'upper-edge', 'lower-edge']);
+  world.interact.lookAt({ x: 0, y: 60, z: -10 });
+  assert.equal(world.observe().player.orientation.x, Math.PI / 4);
+  assert.deepEqual(ids(world), ['level', 'upper-edge', 'high']);
+  world.interact.lookAt({ x: 0, y: 40, z: -10 });
+  assert.deepEqual(ids(world), ['level', 'lower-edge', 'low']);
+  world.interact.setPlayerOrientation({ x: Math.PI / 4, y: 0, z: 0 });
+  assert.deepEqual(ids(world), ['level', 'upper-edge', 'high']);
+  world.interact.lookAt(world.player.position);
+  assert.equal(world.observe().player.orientation.x, Math.PI / 4);
+});
