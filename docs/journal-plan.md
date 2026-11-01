@@ -2,38 +2,43 @@
 
 [Documentation home](../README.md)
 
-Proposal only: no journal entries have been written.
+A place to jot down what I'm curious about, what I tried, what broke and what
+surprised me. This is a personal experiment log, not a formal report.
+No journal entries have been written yet.
 
-## Layout
+Keep entries in `docs/journal/`, with names like `YYYY-MM-DD-short-topic.md`
+and a simple oldest-first list of links in `docs/journal/README.md`.
+Current setup instructions and API details belong in the reference docs.
 
-When approved, create `docs/journal/README.md` as an oldest-first index and
-`docs/journal/YYYY-MM-DD-NN-short-topic.md` for each engineering session.
-Use the actual work date, with a sequence number for multiple entries that day.
-Record both work date and publication date when reconstructing historical work;
-do not infer dates or outcomes from task numbers.
+## Four prompts, not a checklist
 
-The index should list date, question, status and entry link. Keep current setup
-and API reference outside the journal so readers need not read history to run the project.
+### What I wanted to try
 
-## Entry template
+What caught my attention? What did I hope or suspect would happen?
 
-1. **Context and provenance** — revision, environment, seed, model/provider identity where applicable, configuration, prompt and artifact references. Exclude credentials and review transcripts before sharing.
-2. **Question and hypothesis** — what is uncertain and what evidence would support or refute the hypothesis.
-3. **Intervention** — implementation or configuration changes, with links to diffs; separate them from pre-existing behavior.
-4. **Procedure** — commands, inputs, repetitions and success criteria sufficient for reproduction.
-5. **Observed results** — actual checks, measurements, errors and unavailable data; link evidence instead of inventing missing values.
-6. **Interpretation and limitations** — what the observations support, alternative explanations, retention/clock issues and untested claims.
-7. **Decision and next question** — adopted/rejected/deferred changes and a bounded follow-up.
+### What happened
 
-Use explicit labels: **implemented**, **observed**, **hypothesis**, **not tested**.
-Record failed and inconclusive runs, not only successes. Do not equate tool-call
-acceptance with arrival, agent reasoning with causal evidence, or retained
-trajectory duration with wall time.
+What did I actually see? Failures, odd behavior and unfinished attempts are
+worth recording too. “I couldn't get it working” is a perfectly good result.
 
-## Candidate topics to investigate
+### What I learned
 
-Terrain and bounded flight; control handover; perception limits; trajectory
-observability; Pi tool isolation and exports; queues and routes; comparison
-evidence; quality-report coverage. These are topic suggestions, not a reconstructed
-chronology or assertions of experimental success. Populate entries only after
-checking revisions, artifacts and human recollection.
+What changed my mind, or left me puzzled? Keep what I observed separate from
+what I think might explain it: “The craft stopped” is an observation;
+“Maybe the target was below the terrain” is a guess until checked.
+
+### What's next
+
+What's the next thing I'm curious to try? It's fine to leave a question open
+or decide to move on.
+
+## Keep it easy
+
+A few sentences per section are plenty. Skip a prompt if it adds nothing.
+A screenshot, command, seed, model name or link to an export can help when it's
+useful, but none is required. Review shared artifacts for secrets first.
+Don't turn missing details into invented results or certainty.
+
+Writing an entry should take less effort than the experiment itself.
+Capture the interesting bit and stop; there's no need to make every attempt
+look successful or tie it up with a neat conclusion.
