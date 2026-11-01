@@ -1,10 +1,10 @@
-# Proposed engineering journal
+# Engineering journal writing guide
 
 [Documentation home](../README.md)
 
 A place to jot down what I'm curious about, what I tried, what broke and what
 surprised me. This is a personal experiment log, not a formal report.
-No journal entries have been written yet.
+Read the [journal entries](journal/README.md).
 
 Keep entries in `docs/journal/`, with names like `YYYY-MM-DD-short-topic.md`
 and a simple oldest-first list of links in `docs/journal/README.md`.

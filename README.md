@@ -78,7 +78,7 @@ limitations and untested hypotheses.
 - [Pi explorer setup and exports](experiments/pi-explorer/README.md)
 - [Queue and route semantics](experiments/pi-explorer/NAVIGATION.md)
 - [Validation, quality checks and evidence boundaries](docs/validation.md)
-- [Proposed chronological engineering journal](docs/journal-plan.md) — no entries yet
+- [Engineering journal](docs/journal/README.md) — experiments, discoveries and open questions
 
 For changes, preserve public APIs and follow [agent/development guidance](AGENTS.md).
 No license file is currently provided in this repository.
