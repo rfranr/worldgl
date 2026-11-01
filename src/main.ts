@@ -4,6 +4,7 @@ import './style.css';
 import { createTrajectory } from './trajectory';
 import { createTrajectoryView } from './trajectory-view';
 import { createTrajectoryUI } from './trajectory-ui';
+import { createPerceptionView } from './perception-view';
 
 declare global { interface Window {
   world: Pick<World, 'inspect' | 'terrainHeight' | 'interact'>;
@@ -12,10 +13,12 @@ declare global { interface Window {
 const world = createWorld();
 const trajectory = createTrajectory(world);
 window.worldDebug = Object.freeze({ trajectory: trajectory.api });
-const syncTrajectoryUI = createTrajectoryUI(window.worldDebug.trajectory, world.inspect);
+let perceptionVisible = false;
+const syncTrajectoryUI = createTrajectoryUI(window.worldDebug.trajectory, world.inspect, visible => { perceptionVisible = visible; });
 // The browser-facing inspection API exposes perception, not the full simulation snapshot.
 window.world = Object.freeze({ inspect: world.observe, terrainHeight: world.terrainHeight, interact: trajectory.interact });
 const scene = new THREE.Scene();
+const syncPerception = createPerceptionView(scene);
 const syncTrajectory = createTrajectoryView(scene, trajectory);
 scene.background = new THREE.Color('#bacfcf');
 scene.fog = new THREE.Fog('#bacfcf', 80, 230);
@@ -147,6 +150,7 @@ renderer.setAnimationLoop(now => {
   world.update(dt, keys);
   trajectory.update(dt);
   syncTrajectory();
+  syncPerception(world.player, perceptionVisible);
   syncTrajectoryUI(now);
   syncObjects();
   player.position.copy(world.player.position);

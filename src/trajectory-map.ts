@@ -1,5 +1,6 @@
 import { SIZE, type World, type Vector } from './world';
 import type { TrajectoryHistory, Segment } from './trajectory';
+import { drawPerceptionSector } from './perception-view';
 import { trajectoryColors } from './trajectory-colors';
 
 const size = 220, padding = 10, scale = (size - 2 * padding) / SIZE;
@@ -35,7 +36,7 @@ function drawPlayer(ctx: CanvasRenderingContext2D, player: ReturnType<World['ins
 }
 export function createTrajectoryMap(canvas: HTMLCanvasElement, inspect?: World['inspect']) {
   const ctx = canvas.getContext('2d')!;
-  return (history: TrajectoryHistory, state: { visible: boolean; destinationsVisible: boolean }) => {
+  return (history: TrajectoryHistory, state: { visible: boolean; destinationsVisible: boolean; perceptionVisible?: boolean }) => {
     const ratio = Math.min(window.devicePixelRatio || 1, 2);
     if (canvas.width !== size * ratio || canvas.height !== size * ratio) {
       canvas.width = size * ratio; canvas.height = size * ratio;
@@ -50,6 +51,7 @@ export function createTrajectoryMap(canvas: HTMLCanvasElement, inspect?: World['
     if (state.visible) history.segments.forEach(segment => drawSegment(ctx, segment, state.destinationsVisible));
     if (!inspect) return;
     const world = inspect();
+    if (state.perceptionVisible) drawPerceptionSector(ctx, world.player, { origin: point(world.player.position), scale });
     world.objects.forEach(object => drawObject(ctx, object));
     drawPlayer(ctx, world.player);
   };

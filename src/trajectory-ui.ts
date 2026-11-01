@@ -13,6 +13,7 @@ function createPanel() {
     <div class="debug-toggles">
       <label><input type="checkbox" data-panel checked> Debug panel</label>
       <label><input type="checkbox" data-map checked> Minimap</label>
+      <label><input type="checkbox" data-perception> Perception cone</label>
     </div>
     <details class="debug-panel" open>
       <summary>Trajectory recorder</summary>
@@ -33,7 +34,7 @@ function createPanel() {
   document.body.append(root);
   return root;
 }
-export function createTrajectoryUI(api: API, inspect: World['inspect']) {
+export function createTrajectoryUI(api: API, inspect: World['inspect'], setPerceptionVisible: (visible: boolean) => void = () => {}) {
   const root = createPanel();
   const get = <T extends HTMLElement>(selector: string) => root.querySelector<T>(selector)!;
   const panel = get<HTMLDetailsElement>('.debug-panel');
@@ -41,6 +42,8 @@ export function createTrajectoryUI(api: API, inspect: World['inspect']) {
   const record = get<HTMLButtonElement>('[data-record]');
   const visible = get<HTMLInputElement>('[data-visible]');
   const destinations = get<HTMLInputElement>('[data-destinations]');
+  const perception = get<HTMLInputElement>('[data-perception]');
+  perception.onchange = () => { setPerceptionVisible(perception.checked); refresh(); };
   const stats = get<HTMLOutputElement>('[data-stats]');
   get<HTMLInputElement>('[data-panel]').onchange = event => { panel.hidden = !(event.target as HTMLInputElement).checked; };
   get<HTMLInputElement>('[data-map]').onchange = event => { map.hidden = !(event.target as HTMLInputElement).checked; };
@@ -64,7 +67,7 @@ export function createTrajectoryUI(api: API, inspect: World['inspect']) {
     const history = api.getHistory();
     const text = `${state.recording ? 'Recording' : 'Stopped'} · ${history.segments.length} segments · ${history.segments.reduce((n, s) => n + s.samples.length, 0)} samples`;
     if (stats.textContent !== text) stats.textContent = text;
-    if (!map.hidden) draw(history, api.getState());
+    if (!map.hidden) draw(history, { ...state, perceptionVisible: perception.checked });
   }
   let next = 0;
   refresh();
