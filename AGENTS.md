@@ -11,19 +11,19 @@
 
 After modifying source code:
 
-1. Run `npm run check:report`.
-2. Review ESLint violations and the cognitive complexity report.
-3. Resolve quality violations through meaningful improvements, without weakening thresholds or suppressing rules.
-4. Fix violations without changing quality thresholds or disabling rules.
-5. Do not modify existing tests to make them pass.
-6. Repeat verification until all checks pass.
-7. Prefer cohesive modules, clear dependencies and limited shared mutable state.
+1. Run `npm run format`.
+2. Run `npm run check:report`.
+3. Review ESLint violations, cognitive complexity, dependency and structure reports.
+4. Resolve violations through meaningful improvements, without weakening thresholds, disabling rules or adding suppressions.
+5. Do not modify existing tests solely to make them pass.
+6. Repeat formatting and verification until all checks pass.
+7. Prefer cohesive modules, clear dependencies, limited shared mutable state and minimal indirection.
 8. Report remaining violations and relevant metric changes.
-9. Review the dependency report for circular dependencies and architectural issues.
-10. Review the structure report for excessive dependency depth, coupling, and unnecessary indirection.
-    
-Do not install dependencies or modify the environment without explicit approval.
 
+**A task is complete only when all quality checks pass.**
+**Do not install dependencies or modify the environment without explicit approval.**
+
+If a check cannot pass within these constraints, report the blocker instead of bypassing it.
 
 ## Environment
 
@@ -38,6 +38,26 @@ Report:
 - Total and maximum cognitive complexity.
 - Number of remaining violations.
 - Test and build results.
+
+### Human Readability
+
+Code must be optimized for human comprehension, not minimum token count.
+
+- Prefer descriptive names over abbreviations.
+- Each function should express one clear responsibility.
+- Separate business rules, state management and mathematical calculations when it improves clarity.
+- Use named constants for domain-specific thresholds.
+- Prefer explicit intermediate variables over dense expressions.
+- Avoid multiple variable declarations on the same line.
+- Extract functions when their names explain an intention, not merely to satisfy lint limits.
+- Avoid unnecessary abstractions and excessive fragmentation.
+- Preserve observable behavior when refactoring.
+- Make units explicit where ambiguity matters, especially time, distance, speed, and angles. Keep conventional mathematical names where their meaning is locally clear.
+- Make mutation and state lifecycle apparent: identify shared objects and explain what persistent state measures and when it resets.
+- Document non-obvious policy ordering and boundary behavior; explain why, not what the syntax does.
+- Do not compress statements or extract trivial helpers to satisfy size metrics. Keep cohesive logic together.
+
+Before completing a task, review the modified code as if another developer had to maintain it without additional explanations.
 
 ## Development tooling
 

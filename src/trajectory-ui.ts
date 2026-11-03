@@ -1,12 +1,11 @@
 import type { World } from './world';
 import type { createTrajectory } from './trajectory';
 import { createTrajectoryMap } from './trajectory-map';
-
 type API = ReturnType<typeof createTrajectory>['api'];
-
 // Human-only controls: no interaction methods, navigation, or recorder duplication.
 function createPanel() {
   const root = document.createElement('section');
+
   root.id = 'trajectory-debug';
   root.setAttribute('aria-label', 'Trajectory debugging');
   root.innerHTML = `
@@ -32,9 +31,40 @@ function createPanel() {
       <figcaption>N ↑ · X → · −Z ↑<br>▲ Player · ● Beacon · ■ Rock · ◆ Tower</figcaption>
     </figure>`;
   document.body.append(root);
+
   return root;
 }
-export function createTrajectoryUI(api: API, inspect: World['inspect'], setPerceptionVisible: (visible: boolean) => void = () => {}) {
+
+function bindRecorderButtons(root: HTMLElement, api: API, refresh: () => void) {
+  root.querySelector<HTMLButtonElement>('[data-record]')!.onclick = () => {
+    if (api.getState().recording) {
+      api.stop();
+    } else {
+      api.start();
+    }
+
+    refresh();
+  };
+  root.querySelector<HTMLButtonElement>('[data-clear]')!.onclick = () => {
+    api.clear();
+    refresh();
+  };
+  root.querySelector<HTMLButtonElement>('[data-download]')!.onclick = () => {
+    const url = URL.createObjectURL(new Blob([api.exportJSON()], { type: 'application/json' }));
+    const link = document.createElement('a');
+
+    link.href = url;
+    link.download = 'trajectory.json';
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
+}
+
+export function createTrajectoryUI(
+  api: API,
+  inspect: World['inspect'],
+  setPerceptionVisible: (visible: boolean) => void = () => {},
+) {
   const root = createPanel();
   const get = <T extends HTMLElement>(selector: string) => root.querySelector<T>(selector)!;
   const panel = get<HTMLDetailsElement>('.debug-panel');
@@ -43,35 +73,55 @@ export function createTrajectoryUI(api: API, inspect: World['inspect'], setPerce
   const visible = get<HTMLInputElement>('[data-visible]');
   const destinations = get<HTMLInputElement>('[data-destinations]');
   const perception = get<HTMLInputElement>('[data-perception]');
-  perception.onchange = () => { setPerceptionVisible(perception.checked); refresh(); };
+
+  perception.onchange = () => {
+    setPerceptionVisible(perception.checked);
+    refresh();
+  };
   const stats = get<HTMLOutputElement>('[data-stats]');
-  get<HTMLInputElement>('[data-panel]').onchange = event => { panel.hidden = !(event.target as HTMLInputElement).checked; };
-  get<HTMLInputElement>('[data-map]').onchange = event => { map.hidden = !(event.target as HTMLInputElement).checked; };
-  record.onclick = () => { if (api.getState().recording) api.stop(); else api.start(); refresh(); };
-  get('[data-clear]').onclick = () => { api.clear(); refresh(); };
-  visible.onchange = () => { api.setVisible(visible.checked); refresh(); };
-  destinations.onchange = () => { api.setDestinationsVisible(destinations.checked); refresh(); };
-  get('[data-download]').onclick = () => {
-    const url = URL.createObjectURL(new Blob([api.exportJSON()], { type: 'application/json' }));
-    const link = document.createElement('a');
-    link.href = url; link.download = 'trajectory.json';
-    link.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+  get<HTMLInputElement>('[data-panel]').onchange = (event) => {
+    panel.hidden = !(event.target as HTMLInputElement).checked;
+  };
+  get<HTMLInputElement>('[data-map]').onchange = (event) => {
+    map.hidden = !(event.target as HTMLInputElement).checked;
+  };
+  bindRecorderButtons(root, api, refresh);
+  visible.onchange = () => {
+    api.setVisible(visible.checked);
+    refresh();
+  };
+  destinations.onchange = () => {
+    api.setDestinationsVisible(destinations.checked);
+    refresh();
   };
   const canvas = get<HTMLCanvasElement>('canvas');
   const draw = createTrajectoryMap(canvas, inspect);
+
   function refresh() {
     const state = api.getState();
+
     record.textContent = state.recording ? 'Stop recording' : 'Start recording';
-    visible.checked = state.visible; destinations.checked = state.destinationsVisible;
+    visible.checked = state.visible;
+    destinations.checked = state.destinationsVisible;
     const history = api.getHistory();
     const text = `${state.recording ? 'Recording' : 'Stopped'} · ${history.segments.length} segments · ${history.segments.reduce((n, s) => n + s.samples.length, 0)} samples`;
-    if (stats.textContent !== text) stats.textContent = text;
-    if (!map.hidden) draw(history, { ...state, perceptionVisible: perception.checked });
+
+    if (stats.textContent !== text) {
+      stats.textContent = text;
+    }
+    if (!map.hidden) {
+      draw(history, { ...state, perceptionVisible: perception.checked });
+    }
   }
   let next = 0;
+
   refresh();
+
   return (now: number) => {
-    if (now >= next) { refresh(); next = now + 100; }
+    if (now >= next) {
+      refresh();
+      next = now + 100;
+    }
   };
 }
