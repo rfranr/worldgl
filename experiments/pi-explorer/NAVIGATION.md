@@ -11,6 +11,21 @@ At most 64 pending destinations (plus one active) are accepted. Invalid coordina
 
 Terrain blockage or five seconds without meaningful progress produces `blocked`. Unexpected stepping exceptions produce `failed`. Either stops execution and cancels all pending commands; the preceding terminal outcome identifies the cause and nothing is silently skipped. New submissions after a terminal state start a new sequence. Idle after abort is retained for compatibility; outcomes distinguish cancellation from interruption. Navigation failures map to the existing blocked trajectory outcome so the experiment export schema is unchanged.
 
+## Blockage diagnostics
+
+`blocked` means this movement attempt stopped, not that every route to the goal is unreachable. Status includes `blockage`, also retained on the blocked command outcome (including route outcomes):
+
+- `reason: "destination_below_clearance"`: `constraints.minimumTargetY` gives terrain height at the target plus 1.5 world units.
+- `reason: "no_progress"`: `progress.distanceRemaining` gives Euclidean distance in world units and `progress.secondsWithoutProgress` gives simulation seconds without a cumulative distance improvement of at least 0.05 units.
+
+Both include `position` at blockage and the attempted `target`. For example:
+
+```json
+{"reason":"destination_below_clearance","position":{"x":10,"y":8,"z":20},"target":{"x":30,"y":2,"z":40},"constraints":{"minimumTargetY":7.5}}
+```
+
+These are factual diagnostics, not recovery advice: no `suggestedAction`, `retryable`, automatic retry or path planning is supplied. The LLM decides whether and how to retry. Current blockage clears on a new command or cancellation; detached historical outcomes retain it.
+
 ## Routes
 
 `execute_route({waypoints:[{x,y,z}, ...]})` (browser: `world.interact.executeRoute(waypoints)`) atomically validates 1–65 destinations before replacing navigation. The browser API returns `{accepted:true,id,commandIds}` immediately and remains unchanged. The Pi tool waits asynchronously, checking `navigation_status` internally every 100 ms, and returns `{id,commandIds,state,completed,outcomes}`. Browser `arrived` is reported as tool state `completed`; other terminal states are preserved. No model calls are required between waypoints. `move_to(queue:true)` still returns immediately.

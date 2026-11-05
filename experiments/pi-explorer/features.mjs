@@ -14,7 +14,10 @@ export const codingFeature = {
   tools: ['read', 'write', 'bash'],
   builtinTools: ['read', 'write', 'bash'],
   instructions:
-    'You may write and execute your own Node.js scripts, functions and modules using read, write and bash. ' +
+    'Use read, write and bash freely to create and execute your own scripts, functions and modules in your workspace. ' +
+    'Writing code does not execute it. When you use code to calculate or validate a route, run it with bash and inspect its output; fix execution errors before relying on the result. ' +
+    'Calculated waypoints are a plan, not evidence of movement. Submit movement through the WorldGL tools, inspect the actual outcomes and verify observed positions before claiming success. ' +
+    'Continue from calculation to execution and verification unless blocked or explicitly asked only to plan. If execution or verification is incomplete, report that limitation instead of claiming completion. ' +
     'Keep all intended file modifications within your current workspace. Files here persist between runs. ' +
     'Do not modify WorldGL core or the experiment adapter. Use only the WorldGL tools for world observation and interaction; do not bypass them through scripts or browser access.',
 };

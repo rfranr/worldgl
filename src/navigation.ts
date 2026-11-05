@@ -45,7 +45,11 @@ function recordRoute(route: NonNullable<NavigationStatus['route']>, result: Navi
 }
 
 function record(status: NavigationStatus, command: NavigationCommand, outcome: NavigationOutcome['outcome']) {
-  const result = { ...command, outcome };
+  const result: NavigationOutcome = { ...command, outcome };
+
+  if (outcome === 'blocked') {
+    result.blockage = structuredClone(status.blockage);
+  }
 
   status.outcomes.push(result);
 
@@ -131,6 +135,7 @@ export function createNavigation(player: Player, height: Height) {
     clear('interrupted');
   }
   function start(command: NavigationCommand) {
+    delete status.blockage;
     status.state = 'moving';
     status.active = command;
     status.target = command.target;
@@ -163,6 +168,7 @@ export function createNavigation(player: Player, height: Height) {
   function update(dt: number) {
     if (status.state === 'moving') {
       status.state = motion.step(status.target!, dt);
+      status.blockage = motion.getBlockage();
       finish(status, start);
 
       return true;

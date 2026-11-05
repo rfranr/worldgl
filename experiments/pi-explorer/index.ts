@@ -57,7 +57,7 @@ function registerWorldTools(pi: ExtensionAPI, browser: WorldBrowser) {
     move_to:
       'Start asynchronous movement to absolute x, y, z coordinates. Defaults to replacing movement; queue:true appends (64 pending maximum). Returns acceptance and command ID immediately.',
     navigation_status:
-      'Read navigation state (idle, moving, arrived, blocked) and optional target. Does not wait for arrival.',
+      'Read navigation state (idle, moving, arrived, blocked, failed), target and progress. Blocked includes factual blockage diagnostics: destination_below_clearance with minimumTargetY, or no_progress with distance and simulation seconds without progress. Blocked means this attempt stopped, not that every route is unreachable. You decide whether and how to retry. Does not wait for arrival.',
     turn_by:
       'Progressively rotate heading by radians (positive turns left). Replaces movement or rotation; returns immediately.',
     look_at:
