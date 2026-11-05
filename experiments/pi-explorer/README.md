@@ -32,7 +32,9 @@ npm start
 
 A graphical desktop/display is required: Chromium is deliberately **not headless**. Default URL: `http://localhost:5173`. Override with `WORLDGL_URL=http://127.0.0.1:5174 npm start` if necessary. Only local HTTP(S) URLs are accepted.
 
-1. Check the startup notification lists exactly `inspect_world`, `move_by`, `move_to`, `execute_route`, `navigation_status`, `stop_movement`, `turn_by`, `look_at`.
+Choose **World Only** (default) or **World + Coding** in the launcher, then select a model using the existing model filter/number picker. No source edits are needed to switch modes.
+
+1. In World Only, check the startup notification lists exactly `inspect_world`, `move_by`, `move_to`, `execute_route`, `navigation_status`, `stop_movement`, `turn_by`, `look_at`.
 2. Select an already configured model with Pi's `/model` selector (existing Pi authentication is reused).
 3. Paste the contents of [prompt.md](prompt.md) into Pi and submit.
 4. Watch Chromium while the agent operates. Avoid keyboard movement/manual navigation, which can interfere with the experiment.
@@ -42,9 +44,12 @@ A graphical desktop/display is required: Chromium is deliberately **not headless
 
 ## Isolation
 
-The launcher uses `--no-builtin-tools`, `--no-extensions` (except this explicit extension), `--no-mcp`, `--no-skills`, `--no-prompt-templates`, and `--no-context-files`, in a fresh temporary working directory. It supplies a non-coding system prompt and starts a fresh ephemeral session. No repository contents are passed to the model.
+Both modes disable other extensions (except this explicit integration), MCP, skills, prompt templates, repository context loading and session persistence. The extension sets and checks the composed active tool set at startup and before each agent run, and blocks tools outside that set.
 
-The extension explicitly sets and checks the eight-tool active set at session startup and before each agent run, and blocks any other tool call. There is no DOM, shell, file, arbitrary JavaScript, or unrestricted Playwright tool. Only a fixed page-evaluation function dispatches the eight public world operations.
+- **World Only:** eight WorldGL tools, no built-in tools, and a fresh temporary working directory removed on exit. No filesystem, shell, DOM or arbitrary JavaScript tools.
+- **World + Coding:** the same eight WorldGL tools plus Pi's built-in `read`, `write` and `bash`. The working directory is `experiments/pi-explorer/workspace/`, created automatically and gitignored. Files survive exit and subsequent Coding runs; remove them manually for a clean comparison. The agent may create and execute its own Node.js code; no predefined navigation or mathematical helpers are supplied.
+
+Mode-specific instructions require WorldGL tools for world observation/interaction and distinguish acceptance from completion. Coding instructions limit intended file modifications to the workspace and forbid modifying core or the adapter. These are instructions, not filesystem or shell access enforcement: Coding mode has normal host permissions. Do not use it with untrusted prompts or sensitive host access. Only the existing fixed page-evaluation function dispatches WorldGL tool operations.
 
 This is **tool-level isolation, not an OS security sandbox**. The trusted extension itself has normal process permissions; Pi's human-operated UI is not sandboxed. Do not load other extensions or attach repository files to this experiment.
 

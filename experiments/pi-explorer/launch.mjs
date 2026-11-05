@@ -1,8 +1,6 @@
 import { spawn, execFileSync } from 'node:child_process';
-import { mkdtempSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { composeMode } from './features.mjs';
+import { launchArguments, prepareWorkspace } from './launch-config.mjs';
 import { createInterface } from 'node:readline/promises';
 
 function listModels() {
@@ -73,46 +71,40 @@ async function selectModel() {
       throw new Error('Pi returned no models.');
     }
 
-    return await filterModels(rl, models);
+    const mode = await selectMode(rl);
+    const model = await filterModels(rl, models);
+
+    return { mode, model };
   } finally {
     rl.close();
   }
 }
 
-const selected = await selectModel();
+async function selectMode(rl) {
+  while (true) {
+    const choice = (await rl.question('\n1. World Only\n2. World + Coding\nSelect mode (Enter = 1): ')).trim();
 
-const args = [
-  '--no-builtin-tools',
-  '--no-extensions',
-  '--no-mcp',
-  '--no-skills',
-  '--no-prompt-templates',
-  '--no-context-files',
-  '--no-session',
-  '--extension',
-  fileURLToPath(new URL('./index.ts', import.meta.url)),
-  '--system-prompt',
-  'You are exploring a simulated world. Use only the five world tools. You have no filesystem, shell, DOM, or arbitrary JavaScript tools.',
-];
+    if (choice === '' || choice === '1') {
+      return composeMode('worldOnly');
+    }
+    if (choice === '2') {
+      return composeMode('worldWithCoding');
+    }
 
-if (selected) {
-  args.push('--provider', selected.provider);
-  args.push('--model', selected.model);
+    console.log('Invalid selection.');
+  }
 }
 
-console.log(`\nLaunching explorer with ${selected?.id ?? 'Pi default'}\n`);
+const { mode, model: selected } = await selectModel();
+const args = launchArguments(mode, selected);
 
-// Keep the agent isolated from repository context.
-const cwd = mkdtempSync(join(tmpdir(), 'worldgl-explorer-'));
-
-function cleanup() {
-  rmSync(cwd, { recursive: true, force: true });
-}
+console.log(`\nLaunching ${mode.name} with ${selected?.id ?? 'Pi default'}\n`);
+const { cwd, cleanup } = prepareWorkspace(mode);
 
 const child = spawn('pi', args, {
   cwd,
   stdio: 'inherit',
-  env: process.env,
+  env: { ...process.env, WORLDGL_EXPLORER_MODE: mode.name },
 });
 
 child.on('error', (error) => {

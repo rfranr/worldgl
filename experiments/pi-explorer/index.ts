@@ -3,6 +3,7 @@ import { Type } from '@earendil-works/pi-ai';
 import { chromium } from 'playwright';
 import { WorldBrowser, names } from './core.mjs';
 import { ExperimentExport } from './export.mjs';
+import { composeMode, restrictTools } from './features.mjs';
 
 function registerWorldTools(pi: ExtensionAPI, browser: WorldBrowser) {
   const empty = Type.Object({}, { additionalProperties: false });
@@ -56,7 +57,7 @@ function registerWorldTools(pi: ExtensionAPI, browser: WorldBrowser) {
     move_to:
       'Start asynchronous movement to absolute x, y, z coordinates. Defaults to replacing movement; queue:true appends (64 pending maximum). Returns acceptance and command ID immediately.',
     navigation_status:
-      'Read navigation state (idle, moving, arrived, blocked) and optional target. Does not wait for arrival.',
+      'Read navigation state (idle, moving, arrived, blocked, failed), target and progress. Blocked includes factual blockage diagnostics: destination_below_clearance with minimumTargetY, or no_progress with distance and simulation seconds without progress. Blocked means this attempt stopped, not that every route is unreachable. You decide whether and how to retry. Does not wait for arrival.',
     turn_by:
       'Progressively rotate heading by radians (positive turns left). Replaces movement or rotation; returns immediately.',
     look_at:
@@ -78,6 +79,7 @@ function registerWorldTools(pi: ExtensionAPI, browser: WorldBrowser) {
 }
 
 export default function (pi: ExtensionAPI) {
+  const mode = composeMode(process.env.WORLDGL_EXPLORER_MODE);
   const browser = new WorldBrowser(chromium, process.env.WORLDGL_URL);
   let exporter: ExperimentExport;
   let completed = false;
@@ -113,16 +115,11 @@ export default function (pi: ExtensionAPI) {
   });
   registerWorldTools(pi, browser);
   function restrict() {
-    pi.setActiveTools(names);
-    const actual = pi.getActiveTools().slice().sort();
-
-    if (JSON.stringify(actual) !== JSON.stringify([...names].sort())) {
-      throw new Error('Explorer tool isolation check failed');
-    }
+    restrictTools(pi, mode);
   }
   pi.on('session_start', async (_event, ctx) => {
     restrict();
-    ctx.ui.notify(`Explorer tools verified: ${names.join(', ')}`, 'info');
+    ctx.ui.notify(`Explorer tools verified: ${mode.tools.join(', ')}`, 'info');
     exporter = new ExperimentExport();
     await browser.start();
     await browser.page.evaluate(() => window.worldDebug.trajectory.start());
@@ -132,8 +129,8 @@ export default function (pi: ExtensionAPI) {
     restrict();
   });
   pi.on('tool_call', (event) => {
-    if (!names.includes(event.toolName)) {
-      return { block: true, reason: 'Only world exploration tools are permitted' };
+    if (!mode.tools.includes(event.toolName)) {
+      return { block: true, reason: 'Tool is not permitted in this exploration mode' };
     }
   });
   pi.on('session_shutdown', async (_event, ctx) => {
